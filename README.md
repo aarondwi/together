@@ -51,7 +51,7 @@ when keep going is dangerous for integrity, and the best solution is to just *cr
 Alternative
 -------------------------
 
-1. [goBatch](https://github.com/MasterOfBinary/gobatch)
+1. [gobatch](https://github.com/MasterOfBinary/gobatch)
 2. [async/batch](https://github.com/grab/async/blob/master/batch.go)
 
 TODO
