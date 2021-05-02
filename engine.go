@@ -1,6 +1,7 @@
 package together
 
 import (
+	"context"
 	"sync"
 	"time"
 )
@@ -66,8 +67,16 @@ func (e *Engine) worker() {
 	}
 }
 
-// this function should only be called
-// when holding the mutex
+// This function should only be called when holding the mutex
+//
+// Note that, it may still hold the mutex when the chan is full,
+// but IMO that is a better option, cause either:
+//
+// 1. backend can't keep up
+//
+// 2. just bad engine configuration (numOfWorker too low, etc)
+//
+// to not balloon the memory requirement
 func (e *Engine) readyToWork() {
 	e.batchChan <- e.currentBatch
 	e.currentBatch = nil
@@ -99,10 +108,7 @@ func (e *Engine) batchLatencyChecker() {
 	}
 }
 
-// Submit arg to current batch to be worked on by background goroutine.
-//
-// This call will also waits for the results
-func (e *Engine) Submit(arg interface{}) (interface{}, error) {
+func (e *Engine) putToBatch(arg interface{}) BatchResult {
 	e.mu.Lock()
 	if e.currentBatch == nil {
 		e.batchID++
@@ -116,7 +122,60 @@ func (e *Engine) Submit(arg interface{}) (interface{}, error) {
 	}
 	e.mu.Unlock()
 
+	return br
+}
+
+// Submit puts arg to current batch to be worked on by background goroutine.
+//
+// This call will also waits for the results
+func (e *Engine) Submit(arg interface{}) (interface{}, error) {
+	br := e.putToBatch(arg)
 	res, err := br.GetResult()
 	br.batch = nil
 	return res, err
+}
+
+// SubmitWithContext puts arg to current batch to be worked on by background goroutine,
+// using golang's context idiom.
+//
+// Note that unless you need to use the context idiom, it is recommended
+// to use `Submit()` call instead, as it has much, much less allocation (only interface{} typecasting).
+// This API need to create another goroutine, and 2 channels to manage its functionality.
+// (And of course, using context's `WithCancel` or `WithTimeout` also creates goroutines)
+func (e *Engine) SubmitWithContext(
+	ctx context.Context,
+	arg interface{}) (interface{}, error) {
+
+	// fast path, ctx already done
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	br := e.putToBatch(arg)
+
+	// size 1, prevent goroutine leak
+	// if either the context or the other goroutine done first
+	resultCh := make(chan interface{}, 1)
+	errCh := make(chan error, 1)
+
+	go func() {
+		res, err := br.GetResult()
+		br.batch = nil
+		if err != nil {
+			errCh <- err
+			return
+		}
+		resultCh <- res
+	}()
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case res := <-resultCh:
+		return res, nil
+	case err := <-errCh:
+		return nil, err
+	}
 }
