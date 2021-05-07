@@ -106,4 +106,9 @@ func TestEngineValidation(t *testing.T) {
 	if err == nil || err != ErrArgSizeLimitLessThanEqualOne {
 		log.Fatal("Should fail cause argSizeLimit <= 1, but it is not")
 	}
+
+	_, err = NewEngine(1, 2, time.Duration(time.Second), nil)
+	if err == nil || err != ErrNilWorkerFn {
+		log.Fatal("Should fail cause nil workerFn, but it is not")
+	}
 }

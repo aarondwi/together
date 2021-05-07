@@ -2,9 +2,31 @@ package together
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 )
+
+// ErrNumOfWorkerLessThanEqualZero is returned
+// when given numOfWorker is <= zero
+var ErrNumOfWorkerLessThanEqualZero = errors.New(
+	"numOfWorker is expected to be > 0")
+
+// ErrArgSizeLimitLessThanEqualOne is returned
+// when given argSizeLimit <= 1
+var ErrArgSizeLimitLessThanEqualOne = errors.New(
+	"argSizeLimit is expected to be > 1")
+
+// ErrResultNotFound is returned
+// when an ID is not found in the results map
+var ErrResultNotFound = errors.New(
+	"A result is not found on the resulting map. " +
+		"Please check your code to ensure all ids are returned with their corresponding results.")
+
+// ErrNilWorkerFn is returned when`workerFn` is nil
+var ErrNilWorkerFn = errors.New("workerFn can't be nil")
+
+type WorkerFn func(map[uint64]interface{}) (map[uint64]interface{}, error)
 
 // Engine is our batch-controller, loosely adapted from
 // https://github.com/grab/async/blob/master/batch.go,
@@ -19,7 +41,7 @@ type Engine struct {
 	newBatch     *sync.Cond
 	batchID      uint64
 	taskID       uint64
-	fn           func(map[uint64]interface{}) (map[uint64]interface{}, error)
+	fn           WorkerFn
 	batchChan    chan *Batch
 	currentBatch *Batch
 	argSizeLimit int
@@ -33,12 +55,15 @@ func NewEngine(
 	numOfWorker int,
 	argSizeLimit int,
 	waitDuration time.Duration,
-	fn func(map[uint64]interface{}) (map[uint64]interface{}, error)) (*Engine, error) {
+	fn WorkerFn) (*Engine, error) {
 	if numOfWorker <= 0 {
 		return nil, ErrNumOfWorkerLessThanEqualZero
 	}
 	if argSizeLimit <= 1 {
 		return nil, ErrArgSizeLimitLessThanEqualOne
+	}
+	if fn == nil {
+		return nil, ErrNilWorkerFn
 	}
 	mu := &sync.Mutex{}
 	newBatch := sync.NewCond(mu)
