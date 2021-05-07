@@ -19,7 +19,7 @@ func TestClusterValidation(t *testing.T) {
 	}
 }
 
-func TestClusterSubmitNilWhichPartitionFn(t *testing.T) {
+func TestClusterSubmitNilPartitionerFn(t *testing.T) {
 	c, err := NewCluster(
 		// cluster params
 		2, nil,
@@ -34,13 +34,13 @@ func TestClusterSubmitNilWhichPartitionFn(t *testing.T) {
 	}
 
 	_, err = c.Submit(1)
-	if err == nil || err != ErrNilWhichPartitionFunc {
-		log.Fatal("Should error because nil whichPartition func, but it is not")
+	if err == nil || err != ErrNilPartitionerFunc {
+		log.Fatal("Should error because nil partitioner func, but it is not")
 	}
 
 	_, err = c.SubmitWithContext(context.Background(), 1)
-	if err == nil || err != ErrNilWhichPartitionFunc {
-		log.Fatal("Should error because nil whichPartition func, but it is not")
+	if err == nil || err != ErrNilPartitionerFunc {
+		log.Fatal("Should error because nil partitioner func, but it is not")
 	}
 }
 

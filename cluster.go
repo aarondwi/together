@@ -18,12 +18,12 @@ var ErrPartitionNumberTooLow = errors.New(
 var ErrPartitionNumOutOfRange = errors.New(
 	"Cluster's partition number should be in range [0, numOfPartition)")
 
-// ErrNilWhichPartitionFunc is returned
-// when non `ToPartition` function is called when whichPartition is nil
-var ErrNilWhichPartitionFunc = errors.New(
-	"nil whichPartition func. Please use `SubmitToPartition` or `SubmitToPartitionWithContext` instead")
+// ErrNilPartitionerFunc is returned
+// when non `ToPartition` function is called on nil partitioner
+var ErrNilPartitionerFunc = errors.New(
+	"nil partitioner func. Please use `SubmitToPartition` or `SubmitToPartitionWithContext` instead")
 
-// Cluster allows you to scale engines on multi-core machine.
+// Cluster allows you to scale together's engines on multi-core machine.
 // While not perfect (cause using locks), with good partitioning scheme,
 // it will scale to hella lots of goroutines submitting work.
 //
@@ -32,7 +32,7 @@ var ErrNilWhichPartitionFunc = errors.New(
 type Cluster struct {
 	numOfPartition int
 	engines        []*Engine
-	whichPartition func(arg interface{}) int
+	partitioner    func(arg interface{}) int
 }
 
 // NewCluster creates our cluster.
@@ -40,13 +40,13 @@ type Cluster struct {
 // 4 last params are the exact same as a single engine,
 // and directly applied to each engine
 //
-// Notes for `whichPartition` param, the given function
+// Notes for `partitioner` param, the given function
 // should return value in range [0, numOfPartition),
 // and it should be goroutine-safe
 func NewCluster(
 	// cluster params
 	numOfPartition int,
-	whichPartition func(arg interface{}) int,
+	partitioner func(arg interface{}) int,
 
 	// engine params
 	numOfWorker int,
@@ -72,23 +72,23 @@ func NewCluster(
 	return &Cluster{
 		numOfPartition: numOfPartition,
 		engines:        engines,
-		whichPartition: whichPartition,
+		partitioner:    partitioner,
 	}, nil
 }
 
 // Submit selects and puts arg into one of the engines.
 //
-// This call will internally calls `whichPartition` func,
+// This call will internally calls `partitioner` func,
 // to decide which partition to send arg to.
 //
 // Should not be called if you passed nil to workerFn
 func (c *Cluster) Submit(
 	arg interface{}) (interface{}, error) {
 
-	if c.whichPartition == nil {
-		return nil, ErrNilWhichPartitionFunc
+	if c.partitioner == nil {
+		return nil, ErrNilPartitionerFunc
 	}
-	partitionNum := c.whichPartition(arg)
+	partitionNum := c.partitioner(arg)
 	if partitionNum < 0 || partitionNum >= c.numOfPartition {
 		return nil, ErrPartitionNumOutOfRange
 	}
@@ -110,7 +110,7 @@ func (c *Cluster) SubmitToPartition(
 
 // SubmitWithContext selects and puts arg into engine number `partitionNum`.
 //
-// This call will internally calls `whichPartition` func,
+// This call will internally calls `partitioner` func,
 // to decide which partition to send arg to.
 //
 // It is recommended to use `Submit` instead, if you don't need
@@ -121,10 +121,10 @@ func (c *Cluster) SubmitWithContext(
 	ctx context.Context,
 	arg interface{}) (interface{}, error) {
 
-	if c.whichPartition == nil {
-		return nil, ErrNilWhichPartitionFunc
+	if c.partitioner == nil {
+		return nil, ErrNilPartitionerFunc
 	}
-	partitionNum := c.whichPartition(arg)
+	partitionNum := c.partitioner(arg)
 	if partitionNum < 0 || partitionNum >= c.numOfPartition {
 		return nil, ErrPartitionNumOutOfRange
 	}
