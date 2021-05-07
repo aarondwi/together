@@ -39,7 +39,7 @@ Notes
 
 1. This is designed to be used in business-level code, so it is not aiming to be used
 for lower-level code that needs more optimized version (in particular, this implementation use `interface{}`).
-If you wanted to use this, it is preferable to code something similar yourself, specific for your use case, based on this implementation.
+If you still wanted to use this pattern, it is preferable to code something similar yourself, specific for your use case, based on this implementation.
 2. The batching implementation waits on either number of message, or timeout. This is by design,
 because we either want to batch for throughput, or for saving (if you call 3rd party APIs which has rate-limiter,
 but allow multiple message in each call). Other more complex implementation have their own downsides:
@@ -57,6 +57,5 @@ Alternative
 TODO
 -------------------------
 
-1. Add `cluster` implementation (multi-engine scalability)
-2. Add `joiner` implementation (waiting for multiple call at once)
-3. CI with github actions
+1. Add `joiner` implementation (waiting for multiple call at once)
+2. CI with github actions
