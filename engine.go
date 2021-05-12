@@ -30,7 +30,7 @@ type WorkerFn func(map[uint64]interface{}) (map[uint64]interface{}, error)
 
 // Engine is our batch-controller, loosely adapted from
 // https://github.com/grab/async/blob/master/batch.go,
-// designed for business-logic use-case.
+// designed specifically for business-logic use-case.
 //
 // User just need to specify the config on `NewEngine` call,
 // and then use `Submit()` call on logic code.
@@ -68,9 +68,11 @@ func NewEngine(
 	mu := &sync.Mutex{}
 	newBatch := sync.NewCond(mu)
 	e := &Engine{
-		mu:           mu,
-		newBatch:     newBatch,
-		fn:           fn,
+		mu:       mu,
+		newBatch: newBatch,
+		fn:       fn,
+
+		// we allow one buffer for each worker
 		batchChan:    make(chan *Batch, numOfWorker),
 		argSizeLimit: argSizeLimit,
 		waitDuration: waitDuration,
@@ -101,7 +103,7 @@ func (e *Engine) worker() {
 //
 // 2. just bad engine configuration (numOfWorker too low, etc)
 //
-// to not balloon the memory requirement
+// This is a conscious decision, to not balloon the memory requirement
 func (e *Engine) readyToWork() {
 	e.batchChan <- e.currentBatch
 	e.currentBatch = nil
@@ -111,7 +113,7 @@ func (e *Engine) readyToWork() {
 // but that means the `Submit()` call is much faster
 // than the wait.
 //
-// In that case, no need to wait for those.
+// In that case, no need to wait for those batches.
 func (e *Engine) batchLatencyChecker() {
 	var IDToTrack uint64
 	for {
