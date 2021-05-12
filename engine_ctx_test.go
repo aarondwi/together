@@ -22,15 +22,9 @@ func TestEngineWithCtx(t *testing.T) {
 			map[uint64]interface{}, error) {
 			globalCount++
 			res := make(map[uint64]interface{})
-			log.Printf("===== %d =====", globalCount)
-			for k, v := range m {
-				log.Printf("%d: %d", k, v)
-			}
 			for k, v := range m {
 				if v.(int) != valShouldFail {
 					res[k] = v.(int) * 2
-				} else {
-					log.Printf("Now, we get %d", v)
 				}
 			}
 			return res, nil
@@ -42,7 +36,9 @@ func TestEngineWithCtx(t *testing.T) {
 	wg.Add(24)
 	for i := 0; i < 24; i++ {
 		go func(j int) {
-			res, err := e.SubmitWithContext(context.Background(), j)
+			br := e.Submit(j)
+			res, err := br.GetResultWithContext(
+				context.Background())
 			if j == valShouldFail {
 				if err == nil || err != ErrResultNotFound {
 					log.Fatalf("Submit with arg %d should fail, but we got %v, with error %v", valShouldFail, res, err)
@@ -69,6 +65,14 @@ func TestEngineWithCtx(t *testing.T) {
 }
 
 func TestEngineCtxReturnsError(t *testing.T) {
+	/*
+	 * Notes because how go handles local variable,
+	 * if you are using multiple `GetResultWithContext`,
+	 * be sure to assign it to different local variable.
+	 *
+	 * See https://stackoverflow.com/questions/25919213/why-does-go-handle-closures-differently-in-goroutines
+	 * for details
+	 */
 	ErrTest := errors.New("")
 	e, err := NewEngine(
 		1, 10, time.Duration(1*time.Millisecond),
@@ -82,26 +86,34 @@ func TestEngineCtxReturnsError(t *testing.T) {
 		log.Fatalf("It should not error, cause all correct, but got %v", err)
 	}
 
+	// we can assign to br, but for consistency later on,
+	// we start with 1
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
-	_, err = e.SubmitWithContext(ctx, 10)
+	br1 := e.Submit(10)
+	_, err = br1.GetResultWithContext(ctx)
 	// should not be ErrTest, because ctx is cancelled first
 	if err == nil || err == ErrTest {
-		log.Fatal("Should not receive ErrTest, but it is not")
+		log.Fatal("Should not receive ErrTest, cause ctx already cancelled, but it is")
 	}
 
+	// can't assign to br, cause go will consider it to point to same object, causing race condition
+	// so, just continue the numbering
 	ctx, cancelFunc = context.WithCancel(context.Background())
 	go func() {
 		time.Sleep(2 * time.Millisecond)
 		cancelFunc()
 	}()
-	_, err = e.SubmitWithContext(ctx, 10)
+	br2 := e.Submit(10)
+	_, err = br2.GetResultWithContext(ctx)
 	// should not be ErrTest, because ctx is cancelled first
 	if err == nil || err == ErrTest {
-		log.Fatal("Should not receive ErrTest, but it is not")
+		log.Fatal("Should not receive ErrTest, cause ctx got cancelled first, but it is")
 	}
 
-	_, err = e.SubmitWithContext(context.Background(), 10)
+	// same as before, now at 3
+	br3 := e.Submit(10)
+	_, err = br3.GetResultWithContext(context.Background())
 	if err == nil || err != ErrTest {
 		log.Fatal("Should receive ErrTest, but it is not")
 	}

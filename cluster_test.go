@@ -1,7 +1,6 @@
 package together
 
 import (
-	"context"
 	"log"
 	"testing"
 	"time"
@@ -37,11 +36,6 @@ func TestClusterSubmitNilPartitionerFn(t *testing.T) {
 	if err == nil || err != ErrNilPartitionerFunc {
 		log.Fatal("Should error because nil partitioner func, but it is not")
 	}
-
-	_, err = c.SubmitWithContext(context.Background(), 1)
-	if err == nil || err != ErrNilPartitionerFunc {
-		log.Fatal("Should error because nil partitioner func, but it is not")
-	}
 }
 
 func TestClusterSubmitOutsideRange(t *testing.T) {
@@ -60,24 +54,12 @@ func TestClusterSubmitOutsideRange(t *testing.T) {
 		log.Fatalf("Should not fail, but we got %v", err)
 	}
 
-	// without toPartition idiom
 	_, err = c.Submit(1)
 	if err == nil || err != ErrPartitionNumOutOfRange {
 		log.Fatal("Should error because out of range, but it is not")
 	}
 
-	_, err = c.SubmitWithContext(context.Background(), 1)
-	if err == nil || err != ErrPartitionNumOutOfRange {
-		log.Fatal("Should error because out of range, but it is not")
-	}
-
-	// with toPartition idiom
 	_, err = c.SubmitToPartition(2, 1)
-	if err == nil || err != ErrPartitionNumOutOfRange {
-		log.Fatal("Should error because out of range, but it is not")
-	}
-
-	_, err = c.SubmitToPartitionWithContext(context.Background(), 2, 1)
 	if err == nil || err != ErrPartitionNumOutOfRange {
 		log.Fatal("Should error because out of range, but it is not")
 	}
@@ -99,8 +81,11 @@ func TestClusterSubmit(t *testing.T) {
 		log.Fatalf("Should not fail, but we got %v", err)
 	}
 
-	// without toPartition idiom
-	res, err := c.Submit(1)
+	br, err := c.Submit(1)
+	if err != nil {
+		log.Fatalf("Should not error, but instead we got %v", err)
+	}
+	res, err := br.GetResult()
 	if err != nil {
 		log.Fatalf("Should not error, but instead we got %v", err)
 	}
@@ -108,28 +93,15 @@ func TestClusterSubmit(t *testing.T) {
 		log.Fatalf("Should be equal to 1, but instead we got %d", res.(int))
 	}
 
-	res, err = c.SubmitWithContext(context.Background(), 1)
+	br, err = c.SubmitToPartition(0, 2)
 	if err != nil {
 		log.Fatalf("Should not error, but instead we got %v", err)
 	}
-	if res.(int) != 1 {
-		log.Fatalf("Should be equal to 1, but instead we got %d", res.(int))
-	}
-
-	// with toPartition idiom
-	res, err = c.SubmitToPartition(0, 1)
+	res, err = br.GetResult()
 	if err != nil {
 		log.Fatalf("Should not error, but instead we got %v", err)
 	}
-	if res.(int) != 1 {
-		log.Fatalf("Should be equal to 1, but instead we got %d", res.(int))
-	}
-
-	res, err = c.SubmitToPartitionWithContext(context.Background(), 0, 1)
-	if err != nil {
-		log.Fatalf("Should not error, but instead we got %v", err)
-	}
-	if res.(int) != 1 {
-		log.Fatalf("Should be equal to 1, but instead we got %d", res.(int))
+	if res.(int) != 2 {
+		log.Fatalf("Should be equal to 2, but instead we got %d", res.(int))
 	}
 }

@@ -21,7 +21,8 @@ func BenchmarkEngineWithCtx_Parallel256(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := e.SubmitWithContext(context.Background(), i)
+			br := e.Submit(i)
+			_, err := br.GetResultWithContext(context.Background())
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -42,7 +43,8 @@ func BenchmarkEngineWithCtx_Parallel1024(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := e.SubmitWithContext(context.Background(), i)
+			br := e.Submit(i)
+			_, err := br.GetResultWithContext(context.Background())
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -63,7 +65,8 @@ func BenchmarkEngineWithCtx_Parallel4096(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := e.SubmitWithContext(context.Background(), i)
+			br := e.Submit(i)
+			_, err := br.GetResultWithContext(context.Background())
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -84,7 +87,8 @@ func BenchmarkEngineWithCtx_Parallel16384(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := e.SubmitWithContext(context.Background(), i)
+			br := e.Submit(i)
+			_, err := br.GetResultWithContext(context.Background())
 			if err != nil {
 				log.Fatal(err)
 			}

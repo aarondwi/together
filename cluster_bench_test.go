@@ -25,7 +25,11 @@ func BenchmarkCluster_Partition4_Parallel256(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := c.Submit(i)
+			br, err := c.Submit(i)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -51,7 +55,11 @@ func BenchmarkCluster_Partition4_Parallel1024(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := c.Submit(i)
+			br, err := c.Submit(i)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -77,7 +85,11 @@ func BenchmarkCluster_Partition4_Parallel4096(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := c.Submit(i)
+			br, err := c.Submit(i)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -103,7 +115,11 @@ func BenchmarkCluster_Partition4_Parallel16384(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := c.Submit(i)
+			br, err := c.Submit(i)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -129,7 +145,11 @@ func BenchmarkCluster_Partition8_Parallel256(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := c.Submit(i)
+			br, err := c.Submit(i)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -155,7 +175,11 @@ func BenchmarkCluster_Partition8_Parallel1024(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := c.Submit(i)
+			br, err := c.Submit(i)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -181,7 +205,11 @@ func BenchmarkCluster_Partition8_Parallel4096(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := c.Submit(i)
+			br, err := c.Submit(i)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -207,7 +235,11 @@ func BenchmarkCluster_Partition8_Parallel16384(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := c.Submit(i)
+			br, err := c.Submit(i)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -233,7 +265,11 @@ func BenchmarkCluster_Partition16_Parallel256(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := c.Submit(i)
+			br, err := c.Submit(i)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -259,7 +295,11 @@ func BenchmarkCluster_Partition16_Parallel1024(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := c.Submit(i)
+			br, err := c.Submit(i)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -285,7 +325,11 @@ func BenchmarkCluster_Partition16_Parallel4096(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := c.Submit(i)
+			br, err := c.Submit(i)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -311,7 +355,11 @@ func BenchmarkCluster_Partition16_Parallel16384(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := c.Submit(i)
+			br, err := c.Submit(i)
+			if err != nil {
+				log.Fatal(err)
+			}
+			_, err = br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}

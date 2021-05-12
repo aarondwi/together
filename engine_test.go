@@ -21,15 +21,9 @@ func TestEngine(t *testing.T) {
 			map[uint64]interface{}, error) {
 			globalCount++
 			res := make(map[uint64]interface{})
-			log.Printf("===== %d =====", globalCount)
-			for k, v := range m {
-				log.Printf("%d: %d", k, v)
-			}
 			for k, v := range m {
 				if v.(int) != valShouldFail {
 					res[k] = v.(int) * 2
-				} else {
-					log.Printf("Now, we get %d", v)
 				}
 			}
 			return res, nil
@@ -41,7 +35,8 @@ func TestEngine(t *testing.T) {
 	wg.Add(24)
 	for i := 0; i < 24; i++ {
 		go func(j int) {
-			res, err := e.Submit(j)
+			br := e.Submit(j)
+			res, err := br.GetResult()
 			if j == valShouldFail {
 				if err == nil || err != ErrResultNotFound {
 					log.Fatalf("Submit with arg %d should fail, but we got %v, with error %v", valShouldFail, res, err)
@@ -86,7 +81,8 @@ func TestEngineReturnsError(t *testing.T) {
 	wg.Add(24)
 	for i := 0; i < 24; i++ {
 		go func(j int) {
-			_, err := e.Submit(j)
+			br := e.Submit(j)
+			_, err := br.GetResult()
 			if err == nil || err != ErrTest {
 				log.Fatal("Should receive ErrTest, but it is not")
 			}

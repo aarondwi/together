@@ -1,7 +1,6 @@
 package together
 
 import (
-	"context"
 	"errors"
 	"sync"
 	"time"
@@ -80,7 +79,7 @@ func NewEngine(
 	for i := 0; i < numOfWorker; i++ {
 		go e.worker()
 	}
-	go e.batchLatencyChecker()
+	go e.timeoutWatchdog()
 	return e, nil
 }
 
@@ -114,7 +113,7 @@ func (e *Engine) readyToWork() {
 // than the wait.
 //
 // In that case, no need to wait for those batches.
-func (e *Engine) batchLatencyChecker() {
+func (e *Engine) timeoutWatchdog() {
 	var IDToTrack uint64
 	for {
 		e.mu.Lock()
@@ -135,7 +134,8 @@ func (e *Engine) batchLatencyChecker() {
 	}
 }
 
-func (e *Engine) putToBatch(arg interface{}) BatchResult {
+// Submit puts arg to current batch to be worked on by background goroutine.
+func (e *Engine) Submit(arg interface{}) BatchResult {
 	e.mu.Lock()
 	if e.currentBatch == nil {
 		e.batchID++
@@ -150,59 +150,4 @@ func (e *Engine) putToBatch(arg interface{}) BatchResult {
 	e.mu.Unlock()
 
 	return br
-}
-
-// Submit puts arg to current batch to be worked on by background goroutine.
-//
-// This call will also waits for the results
-func (e *Engine) Submit(arg interface{}) (interface{}, error) {
-	br := e.putToBatch(arg)
-	res, err := br.GetResult()
-	br.batch = nil
-	return res, err
-}
-
-// SubmitWithContext puts arg to current batch to be worked on by background goroutine,
-// using golang's context idiom.
-//
-// Note that unless you need to use the context idiom, it is recommended
-// to use `Submit()` call instead, as it has much, much less allocation (only interface{} typecasting).
-// This API need to create another goroutine, and 2 channels to manage its functionality.
-// (And of course, using context's `WithCancel` or `WithTimeout` also creates goroutines)
-func (e *Engine) SubmitWithContext(
-	ctx context.Context,
-	arg interface{}) (interface{}, error) {
-
-	// fast path, ctx already done
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	default:
-	}
-
-	br := e.putToBatch(arg)
-
-	// size 1, prevent goroutine leak
-	// if either the context or the other goroutine done first
-	resultCh := make(chan interface{}, 1)
-	errCh := make(chan error, 1)
-
-	go func() {
-		res, err := br.GetResult()
-		br.batch = nil
-		if err != nil {
-			errCh <- err
-			return
-		}
-		resultCh <- res
-	}()
-
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	case res := <-resultCh:
-		return res, nil
-	case err := <-errCh:
-		return nil, err
-	}
 }

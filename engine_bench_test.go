@@ -20,7 +20,8 @@ func BenchmarkEngine_Parallel256(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := e.Submit(i)
+			br := e.Submit(i)
+			_, err := br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -41,7 +42,8 @@ func BenchmarkEngine_Parallel1024(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := e.Submit(i)
+			br := e.Submit(i)
+			_, err := br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -62,7 +64,8 @@ func BenchmarkEngine_Parallel4096(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := e.Submit(i)
+			br := e.Submit(i)
+			_, err := br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -83,7 +86,8 @@ func BenchmarkEngine_Parallel16384(b *testing.B) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
 			i++
-			_, err := e.Submit(i)
+			br := e.Submit(i)
+			_, err := br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}

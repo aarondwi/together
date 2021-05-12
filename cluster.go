@@ -1,7 +1,6 @@
 package together
 
 import (
-	"context"
 	"errors"
 	"time"
 )
@@ -78,72 +77,25 @@ func NewCluster(
 
 // Submit selects and puts arg into one of the engines.
 //
-// This call will internally calls `partitioner` func,
-// to decide which partition to send arg to.
+// This call will redirect calls to `SubmitToPartition` via `partitioner`
 //
 // Should not be called if you passed nil to workerFn
 func (c *Cluster) Submit(
-	arg interface{}) (interface{}, error) {
+	arg interface{}) (BatchResult, error) {
 
 	if c.partitioner == nil {
-		return nil, ErrNilPartitionerFunc
+		return EmptyBatchResult, ErrNilPartitionerFunc
 	}
-	partitionNum := c.partitioner(arg)
-	if partitionNum < 0 || partitionNum >= c.numOfPartition {
-		return nil, ErrPartitionNumOutOfRange
-	}
-
-	return c.engines[partitionNum].Submit(arg)
+	return c.SubmitToPartition(c.partitioner(arg), arg)
 }
 
 // Submit selects and puts arg into engine number `partitionNum`.
 func (c *Cluster) SubmitToPartition(
 	partitionNum int,
-	arg interface{}) (interface{}, error) {
+	arg interface{}) (BatchResult, error) {
 
 	if partitionNum < 0 || partitionNum >= c.numOfPartition {
-		return nil, ErrPartitionNumOutOfRange
+		return EmptyBatchResult, ErrPartitionNumOutOfRange
 	}
-
-	return c.engines[partitionNum].Submit(arg)
-}
-
-// SubmitWithContext selects and puts arg into engine number `partitionNum`.
-//
-// This call will internally calls `partitioner` func,
-// to decide which partition to send arg to.
-//
-// It is recommended to use `Submit` instead, if you don't need
-// the context idiom. It has less allocation, so it is faster.
-//
-// Should not be called if you passed nil to workerFn
-func (c *Cluster) SubmitWithContext(
-	ctx context.Context,
-	arg interface{}) (interface{}, error) {
-
-	if c.partitioner == nil {
-		return nil, ErrNilPartitionerFunc
-	}
-	partitionNum := c.partitioner(arg)
-	if partitionNum < 0 || partitionNum >= c.numOfPartition {
-		return nil, ErrPartitionNumOutOfRange
-	}
-
-	return c.engines[partitionNum].SubmitWithContext(ctx, arg)
-}
-
-// SubmitToPartitionWithContext selects and puts arg into engine number `partitionNum`.
-//
-// It is recommended to use `SubmitToPartition` instead, if you don't need
-// the context idiom. It has less allocation, so it is faster.
-func (c *Cluster) SubmitToPartitionWithContext(
-	ctx context.Context,
-	partitionNum int,
-	arg interface{}) (interface{}, error) {
-
-	if partitionNum < 0 || partitionNum >= c.numOfPartition {
-		return nil, ErrPartitionNumOutOfRange
-	}
-
-	return c.engines[partitionNum].SubmitWithContext(ctx, arg)
+	return c.engines[partitionNum].Submit(arg), nil
 }
