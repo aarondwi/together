@@ -1,4 +1,4 @@
-package together
+package cluster
 
 import (
 	"math/rand"

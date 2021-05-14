@@ -1,9 +1,11 @@
-package together
+package cluster
 
 import (
 	"log"
 	"testing"
 	"time"
+
+	e "github.com/aarondwi/together/engine"
 )
 
 func TestClusterValidation(t *testing.T) {
@@ -13,7 +15,7 @@ func TestClusterValidation(t *testing.T) {
 	}
 
 	_, err = NewCluster(2, nil, 2, 10, time.Duration(time.Second), nil)
-	if err == nil || err != ErrNilWorkerFn {
+	if err == nil || err != e.ErrNilWorkerFn {
 		log.Fatal("Should return ErrNilWorkerFn cause given nil, but it is not")
 	}
 }

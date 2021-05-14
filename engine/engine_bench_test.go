@@ -1,17 +1,16 @@
-package together
+package engine
 
 import (
-	"context"
 	"log"
 	"math/rand"
 	"testing"
 	"time"
 )
 
-func BenchmarkEngineWithCtx_Parallel256(b *testing.B) {
+func BenchmarkEngine_Parallel256(b *testing.B) {
 	e, err := NewEngine(
 		NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5)*time.Millisecond, batchFunc)
+		time.Duration(5)*time.Millisecond, BatchFunc)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -22,7 +21,7 @@ func BenchmarkEngineWithCtx_Parallel256(b *testing.B) {
 		for pb.Next() {
 			i++
 			br := e.Submit(i)
-			_, err := br.GetResultWithContext(context.Background())
+			_, err := br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -30,10 +29,10 @@ func BenchmarkEngineWithCtx_Parallel256(b *testing.B) {
 	})
 }
 
-func BenchmarkEngineWithCtx_Parallel1024(b *testing.B) {
+func BenchmarkEngine_Parallel1024(b *testing.B) {
 	e, err := NewEngine(
 		NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5)*time.Millisecond, batchFunc)
+		time.Duration(5)*time.Millisecond, BatchFunc)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,7 +43,7 @@ func BenchmarkEngineWithCtx_Parallel1024(b *testing.B) {
 		for pb.Next() {
 			i++
 			br := e.Submit(i)
-			_, err := br.GetResultWithContext(context.Background())
+			_, err := br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -52,10 +51,10 @@ func BenchmarkEngineWithCtx_Parallel1024(b *testing.B) {
 	})
 }
 
-func BenchmarkEngineWithCtx_Parallel4096(b *testing.B) {
+func BenchmarkEngine_Parallel4096(b *testing.B) {
 	e, err := NewEngine(
 		NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5)*time.Millisecond, batchFunc)
+		time.Duration(5)*time.Millisecond, BatchFunc)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -66,7 +65,7 @@ func BenchmarkEngineWithCtx_Parallel4096(b *testing.B) {
 		for pb.Next() {
 			i++
 			br := e.Submit(i)
-			_, err := br.GetResultWithContext(context.Background())
+			_, err := br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -74,10 +73,10 @@ func BenchmarkEngineWithCtx_Parallel4096(b *testing.B) {
 	})
 }
 
-func BenchmarkEngineWithCtx_Parallel16384(b *testing.B) {
+func BenchmarkEngine_Parallel16384(b *testing.B) {
 	e, err := NewEngine(
 		NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5)*time.Millisecond, batchFunc)
+		time.Duration(5)*time.Millisecond, BatchFunc)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -88,7 +87,7 @@ func BenchmarkEngineWithCtx_Parallel16384(b *testing.B) {
 		for pb.Next() {
 			i++
 			br := e.Submit(i)
-			_, err := br.GetResultWithContext(context.Background())
+			_, err := br.GetResult()
 			if err != nil {
 				log.Fatal(err)
 			}

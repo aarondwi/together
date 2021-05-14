@@ -1,4 +1,4 @@
-package together
+package cluster
 
 import "time"
 
@@ -13,7 +13,7 @@ var (
 	PARTITION_16 = 16
 )
 
-func batchFunc(m map[uint64]interface{}) (map[uint64]interface{}, error) {
+func BatchFunc(m map[uint64]interface{}) (map[uint64]interface{}, error) {
 	// simulate fairly fast network call
 	time.Sleep(2 * time.Millisecond)
 	return m, nil

@@ -1,8 +1,10 @@
-package together
+package cluster
 
 import (
 	"errors"
 	"time"
+
+	e "github.com/aarondwi/together/engine"
 )
 
 // ErrPartitionNumberTooLow is returned
@@ -30,7 +32,7 @@ var ErrNilPartitionerFunc = errors.New(
 // This is because all variables can't (and won't) be changed after creation, only be read.
 type Cluster struct {
 	numOfPartition int
-	engines        []*Engine
+	engines        []*e.Engine
 	partitioner    func(arg interface{}) int
 }
 
@@ -51,15 +53,15 @@ func NewCluster(
 	numOfWorker int,
 	argSizeLimit int,
 	waitDuration time.Duration,
-	fn WorkerFn) (*Cluster, error) {
+	fn e.WorkerFn) (*Cluster, error) {
 
 	if numOfPartition <= 1 {
 		return nil, ErrPartitionNumberTooLow
 	}
 
-	engines := make([]*Engine, 0, numOfPartition)
+	engines := make([]*e.Engine, 0, numOfPartition)
 	for i := 0; i < numOfPartition; i++ {
-		e, err := NewEngine(
+		e, err := e.NewEngine(
 			numOfWorker, argSizeLimit,
 			waitDuration, fn)
 		if err != nil {
@@ -81,10 +83,10 @@ func NewCluster(
 //
 // Should not be called if you passed nil to workerFn
 func (c *Cluster) Submit(
-	arg interface{}) (BatchResult, error) {
+	arg interface{}) (e.BatchResult, error) {
 
 	if c.partitioner == nil {
-		return EmptyBatchResult, ErrNilPartitionerFunc
+		return e.EmptyBatchResult, ErrNilPartitionerFunc
 	}
 	return c.SubmitToPartition(c.partitioner(arg), arg)
 }
@@ -92,10 +94,10 @@ func (c *Cluster) Submit(
 // Submit selects and puts arg into engine number `partitionNum`.
 func (c *Cluster) SubmitToPartition(
 	partitionNum int,
-	arg interface{}) (BatchResult, error) {
+	arg interface{}) (e.BatchResult, error) {
 
 	if partitionNum < 0 || partitionNum >= c.numOfPartition {
-		return EmptyBatchResult, ErrPartitionNumOutOfRange
+		return e.EmptyBatchResult, ErrPartitionNumOutOfRange
 	}
 	return c.engines[partitionNum].Submit(arg), nil
 }
