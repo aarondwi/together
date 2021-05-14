@@ -67,7 +67,7 @@ func TestEngineWithCtx(t *testing.T) {
 func TestEngineCtxReturnsError(t *testing.T) {
 	/*
 	 * Notes because how go handles local variable,
-	 * if you are using multiple `GetResultWithContext`,
+	 * if you are using multiple `GetResultWithContext` in single function,
 	 * be sure to assign it to different local variable.
 	 *
 	 * See https://stackoverflow.com/questions/25919213/why-does-go-handle-closures-differently-in-goroutines

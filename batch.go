@@ -65,16 +65,42 @@ func (br *BatchResult) GetResult() (interface{}, error) {
 	return res, nil
 }
 
+// GetResultToChan is the same as GetResult, but instead of returning
+// it puts the result/error to resultCh/errCh
+//
+// Note that both chans need to be initialized with buffer at least 1,
+// to prevent goroutine-leak
+//
+// Primarily used by `Combiner` engine
+func (br *BatchResult) GetResultToChan(resultCh chan interface{}, errCh chan error) {
+	br.batch.wg.Wait()
+	if br.batch.err != nil {
+		errCh <- br.batch.err
+		return
+	}
+	res, ok := br.batch.results[br.id]
+	if !ok {
+		errCh <- ErrResultNotFound
+		return
+	}
+	resultCh <- res
+}
+
 // GetResultWithContext waits until either the batch or ctx is done,
 // then match the result for each caller.
-//
-// Internally, this will call `GetResultWithContextToChan`, after creating needed channels.
 //
 // Note that unless you need to use the context idiom, it is recommended
 // to use `GetResult()` call instead, as it has much, much less allocation (only interface{} typecasting).
 // This API need to create another goroutine, and 2 channels to manage its functionality.
 // (And of course, using context's `WithCancel` or `WithTimeout` also creates goroutines)
-func (br *BatchResult) GetResultWithContext(ctx context.Context) (interface{}, error) {
+//
+// Beware that because how go handles local variable,
+// if you are using multiple `GetResultWithContext` in single function,
+// be sure to assign it to different local variable.
+// See https://stackoverflow.com/questions/25919213/why-does-go-handle-closures-differently-in-goroutines
+// for details
+func (br *BatchResult) GetResultWithContext(
+	ctx context.Context) (interface{}, error) {
 	// fast path, ctx already done
 	select {
 	case <-ctx.Done():
@@ -87,24 +113,9 @@ func (br *BatchResult) GetResultWithContext(ctx context.Context) (interface{}, e
 	resultCh := make(chan interface{}, 1)
 	errCh := make(chan error, 1)
 
-	return br.GetResultWithContextToChan(ctx, resultCh, errCh)
-}
-
-// GetResultWithContextToChan is the same as GetResultWithContext
-// but it doesn't create internal goroutines.
-func (br *BatchResult) GetResultWithContextToChan(
-	ctx context.Context,
-	resultCh chan interface{},
-	errCh chan error) (interface{}, error) {
-	// fast path, ctx already done
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	default:
-	}
-
 	go func() {
 		res, err := br.GetResult()
+		br.batch = nil
 		if err != nil {
 			errCh <- err
 			return
@@ -119,5 +130,47 @@ func (br *BatchResult) GetResultWithContextToChan(
 		return res, nil
 	case err := <-errCh:
 		return nil, err
+	}
+}
+
+// GetResultWithContextToChan is the same as GetResultWithContext,
+// but instead of returning it puts the result/error to resultCh/errCh
+//
+// Note that both chans need to be initialized with buffer at least 1,
+// to prevent goroutine-leak
+//
+// Primarily used by `Combiner` engine
+func (br *BatchResult) GetResultWithContextToChan(
+	ctx context.Context,
+	resultCh chan interface{},
+	errCh chan error) {
+	// fast path, ctx already done
+	select {
+	case <-ctx.Done():
+		errCh <- ctx.Err()
+		return
+	default:
+	}
+
+	ch := make(chan bool, 1)
+
+	var res interface{}
+	var err error
+
+	go func() {
+		res, err = br.GetResult()
+		close(ch)
+	}()
+
+	select {
+	case <-ctx.Done():
+		errCh <- ctx.Err()
+		return
+	case <-ch:
+		if err != nil {
+			errCh <- err
+			return
+		}
+		resultCh <- res
 	}
 }

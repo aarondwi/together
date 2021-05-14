@@ -6,21 +6,23 @@ Easily batch your OLTP code, enjoy the performance.
 Background
 -------------------------
 One of the generally accepted way to increase throughput for data loading is batching.
-This increase in throughput is gotten from amortized cost of doing every step (network RTT, parsing, planning, locking, etc).
+Beside allowing us to amortize every step's cost(network RTT, parsing, planning, locking, etc),
+we also gain capability to do advanced planning (like in [Calvin](http://cs.yale.edu/homes/thomson/publications/calvin-sigmod12.pdf) or [facebook's memcache flow](https://www.mimuw.edu.pl/~iwanicki/courses/ds/2016/presentations/08_Pawlowska.pdf)).
 This pattern is much more prevalent in background ETL workflow, where lots of data ready at once.
 (and lots of good tools, such as [dbt](https://www.getdbt.com/) and [spark](https://spark.apache.org/)).
 
-Human themselves usually can't spot the difference between 5ms and 10-20ms (or even, 100ms).
+Human themselves usually can't spot the difference between 5ms and 10, 50, 100, or even 200ms.
 So actually the option to batch interactive, OLTP-style requests to achieve more throughtput is interesting,
 and most data store (database, queue, 3rd party API, etc) already have batching capability (such as `group commit`, `insert multiple`, `update join`, `select in`, etc).
 
 Unfortunately, most business-logic code (READ: `almost all`) does not use this technique, and instead
 do everything on per request basis. It has 2 implications:
-    1. Number of transactions to handle is equal to the number of requests from users, which means it is hard
-    to handle sudden surge, something easy to do with batching.
-    2. While network indeed is getting faster, because of transaction and locking (important for data integrity)
-    connection is held for relatively long time, causing latencies to add up from waiting, and that results
-    in low-throughput.
+
+1. Number of transactions to handle is equal to the number of requests from users, which means it is hard
+to handle sudden surge, something easy to do with batching.
+2. While network indeed is getting faster, because of transaction and locking (for data integrity)
+connection is held for relatively long time, causing latencies to add up from waiting, and that results
+in low-throughput.
 
 This library is an attempt to help developers easily incorporate batching logic into business-level OLTP code,
 easily achieving high throughput plus backpressure to handle sudden surge.
@@ -56,8 +58,8 @@ Other complex implementation have their own downsides, such as:
 4. This library will never include `panic` handling, because IMO, it is a bad practice. `panic` should only be used
 when keep going is dangerous for integrity, and the best solution is to just **crash**.
 If you (or library you are using) still insist to use `panic`, please catch it and return error instead.
-5. Even though this library lets you easily get high throughput, be cautious with locking inside database.
-One blocked row may block entire batch.
+5. Even though this library lets you easily get high throughput, be cautious with record locking/isolation level.
+One conflicting record may rollback entire batch.
 
 TODO
 -------------------------
