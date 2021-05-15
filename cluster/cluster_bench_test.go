@@ -4,17 +4,18 @@ import (
 	"log"
 	"math/rand"
 	"testing"
-	"time"
+
+	c "github.com/aarondwi/together/common"
 )
 
 func BenchmarkCluster_Partition4_Parallel256(b *testing.B) {
 	c, err := NewCluster(
 		// cluster params
-		PARTITION_4, GetDefaultPartitioner(PARTITION_4),
+		c.PARTITION_4, c.GetDefaultPartitioner(c.PARTITION_4),
 		// per-engine param
-		NUM_OF_WORKER/PARTITION_4, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5*time.Millisecond),
-		BatchFunc,
+		c.NUM_OF_WORKER/c.PARTITION_4, c.NUM_OF_ARGS_TO_WAIT,
+		c.SLEEP_DURATION,
+		c.BatchFunc,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -40,11 +41,11 @@ func BenchmarkCluster_Partition4_Parallel256(b *testing.B) {
 func BenchmarkCluster_Partition4_Parallel1024(b *testing.B) {
 	c, err := NewCluster(
 		// cluster params
-		PARTITION_4, GetDefaultPartitioner(PARTITION_4),
+		c.PARTITION_4, c.GetDefaultPartitioner(c.PARTITION_4),
 		// per-engine param
-		NUM_OF_WORKER/PARTITION_4, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5*time.Millisecond),
-		BatchFunc,
+		c.NUM_OF_WORKER/c.PARTITION_4, c.NUM_OF_ARGS_TO_WAIT,
+		c.SLEEP_DURATION,
+		c.BatchFunc,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -70,11 +71,11 @@ func BenchmarkCluster_Partition4_Parallel1024(b *testing.B) {
 func BenchmarkCluster_Partition4_Parallel4096(b *testing.B) {
 	c, err := NewCluster(
 		// cluster params
-		PARTITION_4, GetDefaultPartitioner(PARTITION_4),
+		c.PARTITION_4, c.GetDefaultPartitioner(c.PARTITION_4),
 		// per-engine param
-		NUM_OF_WORKER/PARTITION_4, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5*time.Millisecond),
-		BatchFunc,
+		c.NUM_OF_WORKER/c.PARTITION_4, c.NUM_OF_ARGS_TO_WAIT,
+		c.SLEEP_DURATION,
+		c.BatchFunc,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -100,11 +101,11 @@ func BenchmarkCluster_Partition4_Parallel4096(b *testing.B) {
 func BenchmarkCluster_Partition4_Parallel16384(b *testing.B) {
 	c, err := NewCluster(
 		// cluster params
-		PARTITION_4, GetDefaultPartitioner(PARTITION_4),
+		c.PARTITION_4, c.GetDefaultPartitioner(c.PARTITION_4),
 		// per-engine param
-		NUM_OF_WORKER/PARTITION_4, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5*time.Millisecond),
-		BatchFunc,
+		c.NUM_OF_WORKER/c.PARTITION_4, c.NUM_OF_ARGS_TO_WAIT,
+		c.SLEEP_DURATION,
+		c.BatchFunc,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -130,11 +131,11 @@ func BenchmarkCluster_Partition4_Parallel16384(b *testing.B) {
 func BenchmarkCluster_Partition8_Parallel256(b *testing.B) {
 	c, err := NewCluster(
 		// cluster params
-		PARTITION_8, GetDefaultPartitioner(PARTITION_8),
+		c.PARTITION_8, c.GetDefaultPartitioner(c.PARTITION_8),
 		// per-engine param
-		NUM_OF_WORKER/PARTITION_8, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5*time.Millisecond),
-		BatchFunc,
+		c.NUM_OF_WORKER/c.PARTITION_8, c.NUM_OF_ARGS_TO_WAIT,
+		c.SLEEP_DURATION,
+		c.BatchFunc,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -160,11 +161,11 @@ func BenchmarkCluster_Partition8_Parallel256(b *testing.B) {
 func BenchmarkCluster_Partition8_Parallel1024(b *testing.B) {
 	c, err := NewCluster(
 		// cluster params
-		PARTITION_8, GetDefaultPartitioner(PARTITION_8),
+		c.PARTITION_8, c.GetDefaultPartitioner(c.PARTITION_8),
 		// per-engine param
-		NUM_OF_WORKER/PARTITION_8, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5*time.Millisecond),
-		BatchFunc,
+		c.NUM_OF_WORKER/c.PARTITION_8, c.NUM_OF_ARGS_TO_WAIT,
+		c.SLEEP_DURATION,
+		c.BatchFunc,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -190,11 +191,11 @@ func BenchmarkCluster_Partition8_Parallel1024(b *testing.B) {
 func BenchmarkCluster_Partition8_Parallel4096(b *testing.B) {
 	c, err := NewCluster(
 		// cluster params
-		PARTITION_8, GetDefaultPartitioner(PARTITION_8),
+		c.PARTITION_8, c.GetDefaultPartitioner(c.PARTITION_8),
 		// per-engine param
-		NUM_OF_WORKER/PARTITION_8, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5*time.Millisecond),
-		BatchFunc,
+		c.NUM_OF_WORKER/c.PARTITION_8, c.NUM_OF_ARGS_TO_WAIT,
+		c.SLEEP_DURATION,
+		c.BatchFunc,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -220,11 +221,11 @@ func BenchmarkCluster_Partition8_Parallel4096(b *testing.B) {
 func BenchmarkCluster_Partition8_Parallel16384(b *testing.B) {
 	c, err := NewCluster(
 		// cluster params
-		PARTITION_8, GetDefaultPartitioner(PARTITION_8),
+		c.PARTITION_8, c.GetDefaultPartitioner(c.PARTITION_8),
 		// per-engine param
-		NUM_OF_WORKER/PARTITION_8, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5*time.Millisecond),
-		BatchFunc,
+		c.NUM_OF_WORKER/c.PARTITION_8, c.NUM_OF_ARGS_TO_WAIT,
+		c.SLEEP_DURATION,
+		c.BatchFunc,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -250,11 +251,11 @@ func BenchmarkCluster_Partition8_Parallel16384(b *testing.B) {
 func BenchmarkCluster_Partition16_Parallel256(b *testing.B) {
 	c, err := NewCluster(
 		// cluster params
-		PARTITION_16, GetDefaultPartitioner(PARTITION_16),
+		c.PARTITION_16, c.GetDefaultPartitioner(c.PARTITION_16),
 		// per-engine param
-		NUM_OF_WORKER/PARTITION_16, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5*time.Millisecond),
-		BatchFunc,
+		c.NUM_OF_WORKER/c.PARTITION_16, c.NUM_OF_ARGS_TO_WAIT,
+		c.SLEEP_DURATION,
+		c.BatchFunc,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -280,11 +281,11 @@ func BenchmarkCluster_Partition16_Parallel256(b *testing.B) {
 func BenchmarkCluster_Partition16_Parallel1024(b *testing.B) {
 	c, err := NewCluster(
 		// cluster params
-		PARTITION_16, GetDefaultPartitioner(PARTITION_16),
+		c.PARTITION_16, c.GetDefaultPartitioner(c.PARTITION_16),
 		// per-engine param
-		NUM_OF_WORKER/PARTITION_16, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5*time.Millisecond),
-		BatchFunc,
+		c.NUM_OF_WORKER/c.PARTITION_16, c.NUM_OF_ARGS_TO_WAIT,
+		c.SLEEP_DURATION,
+		c.BatchFunc,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -310,11 +311,11 @@ func BenchmarkCluster_Partition16_Parallel1024(b *testing.B) {
 func BenchmarkCluster_Partition16_Parallel4096(b *testing.B) {
 	c, err := NewCluster(
 		// cluster params
-		PARTITION_16, GetDefaultPartitioner(PARTITION_16),
+		c.PARTITION_16, c.GetDefaultPartitioner(c.PARTITION_16),
 		// per-engine param
-		NUM_OF_WORKER/PARTITION_16, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5*time.Millisecond),
-		BatchFunc,
+		c.NUM_OF_WORKER/c.PARTITION_16, c.NUM_OF_ARGS_TO_WAIT,
+		c.SLEEP_DURATION,
+		c.BatchFunc,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -340,11 +341,11 @@ func BenchmarkCluster_Partition16_Parallel4096(b *testing.B) {
 func BenchmarkCluster_Partition16_Parallel16384(b *testing.B) {
 	c, err := NewCluster(
 		// cluster params
-		PARTITION_16, GetDefaultPartitioner(PARTITION_16),
+		c.PARTITION_16, c.GetDefaultPartitioner(c.PARTITION_16),
 		// per-engine param
-		NUM_OF_WORKER/PARTITION_16, NUM_OF_ARGS_TO_WAIT,
-		time.Duration(5*time.Millisecond),
-		BatchFunc,
+		c.NUM_OF_WORKER/c.PARTITION_16, c.NUM_OF_ARGS_TO_WAIT,
+		c.SLEEP_DURATION,
+		c.BatchFunc,
 	)
 	if err != nil {
 		log.Fatal(err)

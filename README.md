@@ -37,7 +37,7 @@ go get -u github.com/aarondwi/together
 Usages
 -------------------------
 
-See the [tests](https://github.com/aarondwi/together/blob/main/engine_test.go) directly for the most up-to-date example.
+See the [engine](https://github.com/aarondwi/together/blob/main/engine/engine_test.go), [cluster](https://github.com/aarondwi/together/blob/main/cluster/cluster_test.go), and [combiner](https://github.com/aarondwi/together/blob/main/combiner/combiner_test.go) test files directly for the most up-to-date example.
 
 Notes
 -------------------------
@@ -64,5 +64,6 @@ One conflicting record may rollback entire batch.
 TODO
 -------------------------
 
-1. Add `joiner` implementation (waiting for multiple call at once)
-2. CI with github actions
+1. CI with github actions.
+2. Dynamic number of to-be-waiting goroutine (for context idiom and combiner) using dynamic concurrency control.
+3. Add Combiner implementation.

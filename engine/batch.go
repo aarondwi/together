@@ -65,27 +65,6 @@ func (br *BatchResult) GetResult() (interface{}, error) {
 	return res, nil
 }
 
-// GetResultToChan is the same as GetResult, but instead of returning
-// it puts the result/error to resultCh/errCh
-//
-// Note that both chans need to be initialized with buffer at least 1,
-// to prevent goroutine-leak
-//
-// Primarily used by `Combiner` engine
-func (br *BatchResult) GetResultToChan(resultCh chan interface{}, errCh chan error) {
-	br.batch.wg.Wait()
-	if br.batch.err != nil {
-		errCh <- br.batch.err
-		return
-	}
-	res, ok := br.batch.results[br.id]
-	if !ok {
-		errCh <- ErrResultNotFound
-		return
-	}
-	resultCh <- res
-}
-
 // GetResultWithContext waits until either the batch or ctx is done,
 // then match the result for each caller.
 //
@@ -130,47 +109,5 @@ func (br *BatchResult) GetResultWithContext(
 		return res, nil
 	case err := <-errCh:
 		return nil, err
-	}
-}
-
-// GetResultWithContextToChan is the same as GetResultWithContext,
-// but instead of returning it puts the result/error to resultCh/errCh
-//
-// Note that both chans need to be initialized with buffer at least 1,
-// to prevent goroutine-leak
-//
-// Primarily used by `Combiner` engine
-func (br *BatchResult) GetResultWithContextToChan(
-	ctx context.Context,
-	resultCh chan interface{},
-	errCh chan error) {
-	// fast path, ctx already done
-	select {
-	case <-ctx.Done():
-		errCh <- ctx.Err()
-		return
-	default:
-	}
-
-	ch := make(chan bool, 1)
-
-	var res interface{}
-	var err error
-
-	go func() {
-		res, err = br.GetResult()
-		close(ch)
-	}()
-
-	select {
-	case <-ctx.Done():
-		errCh <- ctx.Err()
-		return
-	case <-ch:
-		if err != nil {
-			errCh <- err
-			return
-		}
-		resultCh <- res
 	}
 }

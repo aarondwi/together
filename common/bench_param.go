@@ -1,4 +1,4 @@
-package cluster
+package common
 
 import "time"
 
@@ -8,13 +8,14 @@ var (
 )
 
 var (
-	PARTITION_4  = 4
-	PARTITION_8  = 8
-	PARTITION_16 = 16
+	PARTITION_4    = 4
+	PARTITION_8    = 8
+	PARTITION_16   = 16
+	SLEEP_DURATION = time.Duration(5 * time.Millisecond)
 )
 
 func BatchFunc(m map[uint64]interface{}) (map[uint64]interface{}, error) {
-	// simulate fairly fast network call
+	// simulate a fairly fast network call
 	time.Sleep(2 * time.Millisecond)
 	return m, nil
 }
