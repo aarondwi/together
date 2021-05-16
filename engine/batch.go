@@ -3,6 +3,8 @@ package engine
 import (
 	"context"
 	"sync"
+
+	com "github.com/aarondwi/together/common"
 )
 
 // Batch is our wrapper, promise implementation.
@@ -16,6 +18,7 @@ type Batch struct {
 	wg      sync.WaitGroup
 	results map[uint64]interface{}
 	err     error
+	wp      *com.WorkerPool
 }
 
 type BatchResult struct {
@@ -28,18 +31,20 @@ var EmptyBatchResult = BatchResult{}
 // NewBatch creates a new batch
 //
 // Once taken to work on, nothing should be put anymore
-func NewBatch(id uint64) *Batch {
+func NewBatch(id uint64, wp *com.WorkerPool) *Batch {
 	b := &Batch{
 		ID: id,
 		// how to pool map?
 		args: make(map[uint64]interface{}),
+		wp:   wp,
 	}
 	b.wg.Add(1)
 	return b
 }
 
 // Put into the Batch.args
-func (b *Batch) Put(id uint64, arg interface{}) BatchResult {
+func (b *Batch) Put(
+	id uint64, arg interface{}) BatchResult {
 	b.args[id] = arg
 	b.argSize++
 	return BatchResult{
@@ -67,6 +72,7 @@ func (br *BatchResult) GetResult() (interface{}, error) {
 
 // GetResultWithContext waits until either the batch or ctx is done,
 // then match the result for each caller.
+// You need to have common.WorkerPool object for this function to work.
 //
 // Note that unless you need to use the context idiom, it is recommended
 // to use `GetResult()` call instead, as it has much, much less allocation (only interface{} typecasting).
@@ -87,12 +93,16 @@ func (br *BatchResult) GetResultWithContext(
 	default:
 	}
 
+	if br.batch.wp == nil {
+		return nil, com.ErrNilWorkerPool
+	}
+
 	// size 1, prevent goroutine leak
 	// if either the context or the other goroutine done first
 	resultCh := make(chan interface{}, 1)
 	errCh := make(chan error, 1)
 
-	go func() {
+	br.batch.wp.Submit(func() {
 		res, err := br.GetResult()
 		br.batch = nil
 		if err != nil {
@@ -100,7 +110,7 @@ func (br *BatchResult) GetResultWithContext(
 			return
 		}
 		resultCh <- res
-	}()
+	})
 
 	select {
 	case <-ctx.Done():

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"log"
 	"testing"
+
+	com "github.com/aarondwi/together/common"
 )
 
 /*
@@ -22,6 +24,7 @@ func TestBatchGetResult(t *testing.T) {
 		args:    map[uint64]interface{}{10: 2},
 		argSize: 10,
 		results: map[uint64]interface{}{10: 2},
+		wp:      nil,
 	}
 
 	br := BatchResult{id: 10, batch: b}
@@ -48,23 +51,25 @@ func TestBatchGetResult(t *testing.T) {
 }
 
 func TestBatchGetResultWithCtx(t *testing.T) {
+	var wp, _ = com.NewWorkerPool(2, 1)
 	b := &Batch{
 		ID:      1,
 		args:    map[uint64]interface{}{10: 2},
-		argSize: 10,
+		argSize: 5,
 		results: map[uint64]interface{}{10: 2},
+		wp:      wp,
 	}
 
-	br := BatchResult{id: 10, batch: b}
+	br1 := BatchResult{id: 10, batch: b}
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
-	_, err := br.GetResultWithContext(ctx)
+	_, err := br1.GetResultWithContext(ctx)
 	if err == nil {
 		log.Fatal("should return ctx.Err(), but it is not")
 	}
 
-	br = BatchResult{id: 10, batch: b}
-	res, err := br.GetResultWithContext(context.Background())
+	br2 := BatchResult{id: 10, batch: b}
+	res, err := br2.GetResultWithContext(context.Background())
 	if err != nil {
 		log.Fatalf("should not error because no error, but we got %v", err)
 	}
@@ -73,9 +78,16 @@ func TestBatchGetResultWithCtx(t *testing.T) {
 	}
 
 	b.err = ErrTest
-	br = BatchResult{id: 11, batch: b}
-	_, err = br.GetResultWithContext(context.Background())
+	br3 := BatchResult{id: 11, batch: b}
+	_, err = br3.GetResultWithContext(context.Background())
 	if err == nil || err != ErrTest {
 		log.Fatalf("err should be ErrTest, but instead we got %v", err)
+	}
+
+	b.wp = nil
+	br4 := BatchResult{id: 11, batch: b}
+	_, err = br4.GetResultWithContext(context.Background())
+	if err == nil || err != com.ErrNilWorkerPool {
+		log.Fatalf("err should be ErrNilWorkerPool, but instead we got %v", err)
 	}
 }

@@ -4,12 +4,9 @@ import (
 	"errors"
 	"sync"
 	"time"
-)
 
-// ErrNumOfWorkerLessThanEqualZero is returned
-// when given numOfWorker is <= zero
-var ErrNumOfWorkerLessThanEqualZero = errors.New(
-	"numOfWorker is expected to be > 0")
+	com "github.com/aarondwi/together/common"
+)
 
 // ErrArgSizeLimitLessThanEqualOne is returned
 // when given argSizeLimit <= 1
@@ -45,6 +42,7 @@ type Engine struct {
 	currentBatch *Batch
 	argSizeLimit int
 	waitDuration time.Duration
+	wp           *com.WorkerPool
 }
 
 // NewEngine creates the engine with specified config
@@ -54,9 +52,10 @@ func NewEngine(
 	numOfWorker int,
 	argSizeLimit int,
 	waitDuration time.Duration,
-	fn WorkerFn) (*Engine, error) {
+	fn WorkerFn,
+	wp *com.WorkerPool) (*Engine, error) {
 	if numOfWorker <= 0 {
-		return nil, ErrNumOfWorkerLessThanEqualZero
+		return nil, com.ErrNumOfWorkerLessThanEqualZero
 	}
 	if argSizeLimit <= 1 {
 		return nil, ErrArgSizeLimitLessThanEqualOne
@@ -75,6 +74,7 @@ func NewEngine(
 		batchChan:    make(chan *Batch, numOfWorker),
 		argSizeLimit: argSizeLimit,
 		waitDuration: waitDuration,
+		wp:           wp,
 	}
 	for i := 0; i < numOfWorker; i++ {
 		go e.worker()
@@ -139,7 +139,7 @@ func (e *Engine) Submit(arg interface{}) BatchResult {
 	e.mu.Lock()
 	if e.currentBatch == nil {
 		e.batchID++
-		e.currentBatch = NewBatch(e.batchID)
+		e.currentBatch = NewBatch(e.batchID, e.wp)
 		e.newBatch.Signal()
 	}
 	e.taskID++

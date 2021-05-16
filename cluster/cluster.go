@@ -1,28 +1,11 @@
 package cluster
 
 import (
-	"errors"
 	"time"
 
+	com "github.com/aarondwi/together/common"
 	e "github.com/aarondwi/together/engine"
 )
-
-// ErrPartitionNumberTooLow is returned
-// when Cluster is not given enough numOfPartition, which is > 1.
-//
-// if <=1, then don't use cluster at all.
-var ErrPartitionNumberTooLow = errors.New(
-	"Cluster's partition number should be > 1")
-
-// ErrPartitionNumOutOfRange is returned
-// when the resulting partitionNum is outside slice's range
-var ErrPartitionNumOutOfRange = errors.New(
-	"Cluster's partition number should be in range [0, numOfPartition)")
-
-// ErrNilPartitionerFunc is returned
-// when non `ToPartition` function is called on nil partitioner
-var ErrNilPartitionerFunc = errors.New(
-	"nil partitioner func. Please use `SubmitToPartition` or `SubmitToPartitionWithContext` instead")
 
 // Cluster allows you to scale together's engines on multi-core machine.
 // While not perfect (cause using locks), with good partitioning scheme,
@@ -43,7 +26,9 @@ type Cluster struct {
 //
 // Notes for `partitioner` param, the given function
 // should return value in range [0, numOfPartition),
-// and it should be goroutine-safe
+// and it should be goroutine-safe.
+//
+// Note that the WorkerPool is shared to all engines
 func NewCluster(
 	// cluster params
 	numOfPartition int,
@@ -53,17 +38,18 @@ func NewCluster(
 	numOfWorker int,
 	argSizeLimit int,
 	waitDuration time.Duration,
-	fn e.WorkerFn) (*Cluster, error) {
+	fn e.WorkerFn,
+	wp *com.WorkerPool) (*Cluster, error) {
 
 	if numOfPartition <= 1 {
-		return nil, ErrPartitionNumberTooLow
+		return nil, com.ErrPartitionNumberTooLow
 	}
 
 	engines := make([]*e.Engine, 0, numOfPartition)
 	for i := 0; i < numOfPartition; i++ {
 		e, err := e.NewEngine(
 			numOfWorker, argSizeLimit,
-			waitDuration, fn)
+			waitDuration, fn, wp)
 		if err != nil {
 			return nil, err
 		}
@@ -86,7 +72,7 @@ func (c *Cluster) Submit(
 	arg interface{}) (e.BatchResult, error) {
 
 	if c.partitioner == nil {
-		return e.EmptyBatchResult, ErrNilPartitionerFunc
+		return e.EmptyBatchResult, com.ErrNilPartitionerFunc
 	}
 	return c.SubmitToPartition(c.partitioner(arg), arg)
 }
@@ -97,7 +83,7 @@ func (c *Cluster) SubmitToPartition(
 	arg interface{}) (e.BatchResult, error) {
 
 	if partitionNum < 0 || partitionNum >= c.numOfPartition {
-		return e.EmptyBatchResult, ErrPartitionNumOutOfRange
+		return e.EmptyBatchResult, com.ErrPartitionNumOutOfRange
 	}
 	return c.engines[partitionNum].Submit(arg), nil
 }

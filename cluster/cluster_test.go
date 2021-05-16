@@ -5,16 +5,18 @@ import (
 	"testing"
 	"time"
 
+	com "github.com/aarondwi/together/common"
 	e "github.com/aarondwi/together/engine"
 )
 
 func TestClusterValidation(t *testing.T) {
-	_, err := NewCluster(1, nil, 2, 10, time.Duration(time.Second), nil)
-	if err == nil || err != ErrPartitionNumberTooLow {
+	var wp, _ = com.NewWorkerPool(4, 10)
+	_, err := NewCluster(1, nil, 2, 10, time.Duration(time.Second), nil, wp)
+	if err == nil || err != com.ErrPartitionNumberTooLow {
 		log.Fatal("Should return ErrPartitionNumberTooLow cause only given 1, but it is not")
 	}
 
-	_, err = NewCluster(2, nil, 2, 10, time.Duration(time.Second), nil)
+	_, err = NewCluster(2, nil, 2, 10, time.Duration(time.Second), nil, wp)
 	if err == nil || err != e.ErrNilWorkerFn {
 		log.Fatal("Should return ErrNilWorkerFn cause given nil, but it is not")
 	}
@@ -29,13 +31,13 @@ func TestClusterSubmitNilPartitionerFn(t *testing.T) {
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return m, nil
-		})
+		}, nil)
 	if err != nil {
 		log.Fatalf("Should not fail, but we got %v", err)
 	}
 
 	_, err = c.Submit(1)
-	if err == nil || err != ErrNilPartitionerFunc {
+	if err == nil || err != com.ErrNilPartitionerFunc {
 		log.Fatal("Should error because nil partitioner func, but it is not")
 	}
 }
@@ -51,18 +53,18 @@ func TestClusterSubmitOutsideRange(t *testing.T) {
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return m, nil
-		})
+		}, nil)
 	if err != nil {
 		log.Fatalf("Should not fail, but we got %v", err)
 	}
 
 	_, err = c.Submit(1)
-	if err == nil || err != ErrPartitionNumOutOfRange {
+	if err == nil || err != com.ErrPartitionNumOutOfRange {
 		log.Fatal("Should error because out of range, but it is not")
 	}
 
 	_, err = c.SubmitToPartition(2, 1)
-	if err == nil || err != ErrPartitionNumOutOfRange {
+	if err == nil || err != com.ErrPartitionNumOutOfRange {
 		log.Fatal("Should error because out of range, but it is not")
 	}
 }
@@ -78,7 +80,7 @@ func TestClusterSubmit(t *testing.T) {
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return m, nil
-		})
+		}, nil)
 	if err != nil {
 		log.Fatalf("Should not fail, but we got %v", err)
 	}

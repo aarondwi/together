@@ -19,3 +19,5 @@ func BatchFunc(m map[uint64]interface{}) (map[uint64]interface{}, error) {
 	time.Sleep(2 * time.Millisecond)
 	return m, nil
 }
+
+var WP, _ = NewWorkerPool(8, 1024)

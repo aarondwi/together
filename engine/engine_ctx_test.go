@@ -7,9 +7,12 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	com "github.com/aarondwi/together/common"
 )
 
 func TestEngineWithCtx(t *testing.T) {
+	var wp, _ = com.NewWorkerPool(4, 10)
 	valShouldFail := 18
 	globalCount := 0
 	e, err := NewEngine(
@@ -28,7 +31,7 @@ func TestEngineWithCtx(t *testing.T) {
 				}
 			}
 			return res, nil
-		})
+		}, wp)
 	if err != nil {
 		log.Fatalf("It should not error, cause all correct, but got %v", err)
 	}
@@ -73,6 +76,7 @@ func TestEngineCtxReturnsError(t *testing.T) {
 	 * See https://stackoverflow.com/questions/25919213/why-does-go-handle-closures-differently-in-goroutines
 	 * for details
 	 */
+	var wp, _ = com.NewWorkerPool(4, 10)
 	ErrTest := errors.New("")
 	e, err := NewEngine(
 		1, 10, time.Duration(1*time.Millisecond),
@@ -81,7 +85,7 @@ func TestEngineCtxReturnsError(t *testing.T) {
 			// gives us time to cancel the ctx first
 			time.Sleep(10 * time.Millisecond)
 			return nil, ErrTest
-		})
+		}, wp)
 	if err != nil {
 		log.Fatalf("It should not error, cause all correct, but got %v", err)
 	}
@@ -115,6 +119,6 @@ func TestEngineCtxReturnsError(t *testing.T) {
 	br3 := e.Submit(10)
 	_, err = br3.GetResultWithContext(context.Background())
 	if err == nil || err != ErrTest {
-		log.Fatal("Should receive ErrTest, but it is not")
+		log.Fatalf("Should receive ErrTest, but instead we got %v", err)
 	}
 }

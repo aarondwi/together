@@ -6,9 +6,12 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	com "github.com/aarondwi/together/common"
 )
 
 func TestEngine(t *testing.T) {
+	var wp, _ = com.NewWorkerPool(4, 10)
 	valShouldFail := 13
 	globalCount := 0
 	e, err := NewEngine(
@@ -27,7 +30,7 @@ func TestEngine(t *testing.T) {
 				}
 			}
 			return res, nil
-		})
+		}, wp)
 	if err != nil {
 		log.Fatalf("It should not error, cause all correct, but got %v", err)
 	}
@@ -63,6 +66,7 @@ func TestEngine(t *testing.T) {
 }
 
 func TestEngineReturnsError(t *testing.T) {
+	var wp, _ = com.NewWorkerPool(4, 10)
 	ErrTest := errors.New("")
 	e, err := NewEngine(
 		1, 10, time.Duration(5*time.Millisecond),
@@ -73,7 +77,7 @@ func TestEngineReturnsError(t *testing.T) {
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
-		})
+		}, wp)
 	if err != nil {
 		log.Fatalf("It should not error, cause all correct, but got %v", err)
 	}
@@ -93,17 +97,18 @@ func TestEngineReturnsError(t *testing.T) {
 }
 
 func TestEngineValidation(t *testing.T) {
-	_, err := NewEngine(-1, 10, time.Duration(time.Second), nil)
-	if err == nil || err != ErrNumOfWorkerLessThanEqualZero {
+	var wp, _ = com.NewWorkerPool(4, 10)
+	_, err := NewEngine(-1, 10, time.Duration(time.Second), nil, wp)
+	if err == nil || err != com.ErrNumOfWorkerLessThanEqualZero {
 		log.Fatal("Should fail cause numOfWorker <= 0, but it is not")
 	}
 
-	_, err = NewEngine(1, -1, time.Duration(time.Second), nil)
+	_, err = NewEngine(1, -1, time.Duration(time.Second), nil, wp)
 	if err == nil || err != ErrArgSizeLimitLessThanEqualOne {
 		log.Fatal("Should fail cause argSizeLimit <= 1, but it is not")
 	}
 
-	_, err = NewEngine(1, 2, time.Duration(time.Second), nil)
+	_, err = NewEngine(1, 2, time.Duration(time.Second), nil, wp)
 	if err == nil || err != ErrNilWorkerFn {
 		log.Fatal("Should fail cause nil workerFn, but it is not")
 	}
