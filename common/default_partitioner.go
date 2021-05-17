@@ -5,12 +5,18 @@ import (
 	"sync"
 )
 
+// Please look at https://github.com/golang/go/issues/21393
+// for why we need mutex
 var globalRng = rand.New(rand.NewSource(rand.Int63()))
+var mu = sync.Mutex{}
 
 var randPool = sync.Pool{
 	New: func() interface{} {
-		return rand.New(
-			rand.NewSource(globalRng.Int63() - int64(globalRng.Int31())))
+		mu.Lock()
+		r := rand.New(
+			rand.NewSource(globalRng.Int63()))
+		mu.Unlock()
+		return r
 	},
 }
 

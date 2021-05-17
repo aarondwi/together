@@ -20,4 +20,7 @@ func BatchFunc(m map[uint64]interface{}) (map[uint64]interface{}, error) {
 	return m, nil
 }
 
-var WP, _ = NewWorkerPool(8, 512)
+func GetDefaultWorkerPool() *WorkerPool {
+	var WP, _ = NewWorkerPool(8, 512)
+	return WP
+}
