@@ -102,15 +102,19 @@ func (br *BatchResult) GetResultWithContext(
 	resultCh := make(chan interface{}, 1)
 	errCh := make(chan error, 1)
 
-	br.batch.wp.Submit(func() {
-		res, err := br.GetResult()
-		br.batch = nil
-		if err != nil {
-			errCh <- err
-			return
-		}
-		resultCh <- res
-	})
+	br.batch.wp.Submit(
+		func(resultCh chan interface{},
+			errCh chan error) func() {
+			return func() {
+				res, err := br.GetResult()
+				br.batch = nil
+				if err != nil {
+					errCh <- err
+					return
+				}
+				resultCh <- res
+			}
+		}(resultCh, errCh))
 
 	select {
 	case <-ctx.Done():

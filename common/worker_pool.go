@@ -29,12 +29,11 @@ func NewWorkerPool(
 
 	for i := 0; i < numOfPartition; i++ {
 		for j := 0; j < numOfWorker; j++ {
-			go func(k int) {
-				for {
-					fn := <-channels[k]
+			go func(ch chan func()) {
+				for fn := range ch {
 					fn()
 				}
-			}(i)
+			}(channels[i])
 		}
 	}
 
@@ -46,6 +45,5 @@ func NewWorkerPool(
 
 // Submit select a random channel, and then put fn there
 func (wp *WorkerPool) Submit(fn func()) {
-	whichPartition := wp.partitioner(nil)
-	wp.channels[whichPartition] <- fn
+	wp.channels[wp.partitioner(nil)] <- fn
 }

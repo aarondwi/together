@@ -8,7 +8,7 @@ Background
 One of the generally accepted way to increase throughput for data loading is batching.
 Beside allowing us to amortize every step's cost(network RTT, parsing, planning, locking, etc),
 we also gain capability to do advanced planning (like in [Calvin](http://cs.yale.edu/homes/thomson/publications/calvin-sigmod12.pdf) or [facebook's memcache flow](https://www.mimuw.edu.pl/~iwanicki/courses/ds/2016/presentations/08_Pawlowska.pdf)).
-This pattern is much more prevalent in background ETL workflow, where lots of data ready at once.
+This pattern is much more prevalent in background ETL workflow, where lots of data is ready at once.
 (and lots of good tools, such as [dbt](https://www.getdbt.com/) and [spark](https://spark.apache.org/)).
 
 Human themselves usually can't spot the difference between 5ms and 10, 50, 100, or even 200ms.
@@ -34,6 +34,17 @@ Installation
 go get -u github.com/aarondwi/together
 ```
 
+Features
+-------------------------
+
+1. Small codebase (<1000 LoC).
+2. Fast. On 2 years old laptop with Intel Core-i7 8550u, with batch worker simulating network call by sleeping for 2ms, `engine` reaching ~2 million invocation.
+3. Easy API (just use `Submit` or equivalent call), and all params will be available to batch worker. You just need to return the call with same key as parameters.
+4. Circumvent single lock contention using `Cluster` implementation.
+5. Background waiting worker, so no goroutine creations on hot path (using tunable `WorkerPool`).
+6. Waiting multiple results at once, to reduce latency (Using `Combiner` implementation).
+7. Non-context and context variant available
+
 Usages
 -------------------------
 
@@ -42,7 +53,7 @@ See the [engine](https://github.com/aarondwi/together/blob/main/engine/engine_te
 Notes
 -------------------------
 
-1. By `batching`, it does not mean batch processor like [gobatch](https://github.com/MasterOfBinary/gobatch),
+1. By `batching`, it does not mean a batch processor like [gobatch](https://github.com/MasterOfBinary/gobatch),
 [spring batch](https://spring.io/projects/spring-batch), [dbt](https://www.getdbt.com/), [spark](https://spark.apache.org/), or anything like that. `Batching` here means aggregating multiple request into single request to backend, akin to deduplication.
 2. This is designed to be used in business-level OLTP code, so it is not aiming to be *every-last-cpu-cycle* optimized
 (in particular, this implementation use `interface{}`, until golang support generics).
@@ -66,4 +77,3 @@ TODO
 
 1. CI with github actions.
 2. Dynamic number of to-be-waiting goroutine (for context idiom and combiner) using dynamic concurrency control.
-3. Add Combiner implementation.
