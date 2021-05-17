@@ -38,7 +38,7 @@ Features
 -------------------------
 
 1. Small codebase (<1000 LoC).
-2. Fast. On 2 years old laptop with Intel Core-i7 8550u, with batch worker simulating network call by sleeping for 2ms, `engine` reaching ~2 million invocation.
+2. Fast. On 2 years old laptop with Intel Core-i7 8550u, with batch worker simulating network call by sleeping for 2ms, `Cluster` reaching ~2 million invocation/s.
 3. Easy API (just use `Submit` or equivalent call), and all params will be available to batch worker. You just need to return the call with same key as parameters.
 4. Circumvent single lock contention using `Cluster` implementation.
 5. Background waiting worker, so no goroutine creations on hot path (using tunable `WorkerPool`).
@@ -69,8 +69,8 @@ Other complex implementation have their own downsides, such as:
 4. This library will never include `panic` handling, because IMO, it is a bad practice. `panic` should only be used
 when keep going is dangerous for integrity, and the best solution is to just **crash**.
 If you (or library you are using) still insist to use `panic`, please catch it and return error instead.
-5. Even though this library lets you easily get high throughput, be cautious with record locking/isolation level.
-One conflicting record may rollback entire batch.
+5. Even though this library lets you easily batch your requests, be cautious with record locking/isolation level.
+One conflicting record may block/rollback entire batch.
 
 TODO
 -------------------------

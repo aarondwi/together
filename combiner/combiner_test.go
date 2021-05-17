@@ -11,7 +11,7 @@ import (
 	e "github.com/aarondwi/together/engine"
 )
 
-var wp, _ = com.NewWorkerPool(4, 4)
+var wp, _ = com.NewWorkerPool(4, 10)
 var ErrTest = errors.New("")
 
 func TestValidation(t *testing.T) {
@@ -45,15 +45,18 @@ func TestAll(t *testing.T) {
 
 	res1 := e1.Submit(1)
 	res2 := e1.Submit(2)
+	res3 := e1.Submit(3)
+	res4 := e1.Submit(4)
 
-	resArr, err := c.All([]e.BatchResult{res1, res2})
+	resArr, err := c.All([]e.BatchResult{res1, res2, res3, res4})
 	if err != nil {
 		log.Fatalf("It should not error, cause all ok, but we got %v", err)
 	}
-	if len(resArr) != 2 {
-		log.Fatalf("It should only be 2, cause we submit 2 times, but instead we got %v", resArr...)
+	if len(resArr) != 4 {
+		log.Fatalf("It should only be 4, cause we submit 4 times, but instead we got %v", resArr...)
 	}
-	if resArr[0].(int) != 2 || resArr[1].(int) != 4 {
+	if resArr[0].(int) != 2 || resArr[1].(int) != 4 ||
+		resArr[2].(int) != 6 || resArr[3].(int) != 8 {
 		log.Fatalf("It should be 2 and 4, but instead we got %v", resArr...)
 	}
 
@@ -63,10 +66,10 @@ func TestAll(t *testing.T) {
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
 		}, wp)
-	res3 := e1.Submit(3)
-	res4 := e2.Submit(4)
+	res5 := e1.Submit(3)
+	res6 := e2.Submit(4)
 
-	_, err = c.All([]e.BatchResult{res3, res4})
+	_, err = c.All([]e.BatchResult{res5, res6})
 	if err == nil || err != ErrTest {
 		log.Fatalf("It should return error ErrTest, but instead we got %v", err)
 	}
@@ -100,15 +103,19 @@ func TestAllWithCtx(t *testing.T) {
 
 	res1 := e1.Submit(1)
 	res2 := e1.Submit(2)
+	res3 := e1.Submit(3)
+	res4 := e1.Submit(4)
 
-	resArr, err := c.AllWithContext(context.Background(), []e.BatchResult{res1, res2})
+	resArr, err := c.AllWithContext(
+		context.Background(), []e.BatchResult{res1, res2, res3, res4})
 	if err != nil {
 		log.Fatalf("It should not error, cause all ok, but we got %v", err)
 	}
-	if len(resArr) != 2 {
-		log.Fatalf("It should only be 2, cause we submit 2 times, but instead we got %v", resArr...)
+	if len(resArr) != 4 {
+		log.Fatalf("It should only be 4, cause we submit 4 times, but instead we got %v", resArr...)
 	}
-	if resArr[0].(int) != 2 || resArr[1].(int) != 4 {
+	if resArr[0].(int) != 2 || resArr[1].(int) != 4 ||
+		resArr[2].(int) != 6 || resArr[3].(int) != 8 {
 		log.Fatalf("It should be 2 and 4, but instead we got %v", resArr...)
 	}
 
@@ -118,10 +125,10 @@ func TestAllWithCtx(t *testing.T) {
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
 		}, wp)
-	res3 := e1.Submit(3)
-	res4 := e2.Submit(4)
+	res5 := e1.Submit(3)
+	res6 := e2.Submit(4)
 
-	_, err = c.AllWithContext(context.Background(), []e.BatchResult{res3, res4})
+	_, err = c.AllWithContext(context.Background(), []e.BatchResult{res5, res6})
 	if err == nil || err != ErrTest {
 		log.Fatalf("It should return error ErrTest, but instead we got %v", err)
 	}

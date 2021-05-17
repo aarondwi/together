@@ -26,10 +26,17 @@ type resolutionHelper struct {
 	err    error
 }
 
+// Combiner is our main struct
+// that exposes functions to wait multiple batchresult simultaneously
 type Combiner struct {
 	wp *com.WorkerPool
 }
 
+// NewCombiner creates our combiner, given the WorkerPool.
+//
+// Notes that for the context idioms, you need to either separate the pool,
+// or create big enough pool for both combiner and batchresult.{something}WithContext.
+// Else, it may block forever
 func NewCombiner(wp *com.WorkerPool) (*Combiner, error) {
 	if wp == nil {
 		return nil, com.ErrNilWorkerPool
