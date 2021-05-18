@@ -24,8 +24,15 @@ to handle sudden surge, something easy to do with batching.
 connection is held for relatively long time, causing latencies to add up from waiting, and that results
 in low-throughput.
 
-This library is an attempt to help developers easily incorporate batching logic into business-level OLTP code,
-easily achieving high throughput plus backpressure to handle sudden surge.
+When I said `almost all` before, it is because there is a prominent user of batching in OLTP scheme, that is,
+[GraphQL](graphql.org)
+with its [Dataloader](https://github.com/graphql/dataloader) pattern. They can do it because each graphql request is basically a graph/tree request,
+meaning lots of data can be queried at once. But it is still done on per request basis,
+which also means 2 points above still hold.
+
+In my opinion, the main reason batching is not usually done on OLTP scheme is there are no
+good libraries to help them gather the requests easily (even for graphql library maintainer, see [here](https://productionreadygraphql.com/blog/2020-05-21-graphql-to-sql/)).
+This library is an attempt to solve that, easily achieving high throughput plus backpressure to handle sudden surge.
 
 Installation
 -------------------------
