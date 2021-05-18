@@ -220,7 +220,7 @@ func TestRaceWithCtx(t *testing.T) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
 	_, errs = c.RaceWithContext(ctx, []e.BatchResult{})
-	if errs != nil || len(errs) != 0 {
+	if errs == nil || len(errs) != 0 {
 		log.Fatalf("errs have len zero, but instead we got %v", errs)
 	}
 
@@ -349,7 +349,7 @@ func TestEveryWithCtx(t *testing.T) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
 	_, errs = c.EveryWithContext(ctx, []e.BatchResult{})
-	if errs != nil || len(errs) != 0 {
+	if errs == nil || len(errs) != 0 {
 		log.Fatalf("errs have len zero, but instead we got %v", errs)
 	}
 

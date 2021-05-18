@@ -21,7 +21,7 @@ type Cluster struct {
 
 // NewCluster creates our cluster.
 //
-// 4 last params are the exact same as a single engine,
+// 5 last params are the exact same as a single engine,
 // and directly applied to each engine
 //
 // Notes for `partitioner` param, the given function

@@ -89,13 +89,13 @@ func (c *Combiner) All(brs []e.BatchResult) ([]interface{}, error) {
 // to use `All` call instead, as it has less allocations (so it is faster)
 func (c *Combiner) AllWithContext(
 	ctx context.Context, brs []e.BatchResult) ([]interface{}, error) {
-	// fast path, ctx already done
+
+	// fast path
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	default:
 	}
-
 	if len(brs) == 0 {
 		return nil, nil
 	}
@@ -175,10 +175,7 @@ func (c *Combiner) Race(brs []e.BatchResult) (interface{}, []error) {
 func (c *Combiner) RaceWithContext(
 	ctx context.Context, brs []e.BatchResult) (interface{}, []error) {
 
-	if len(brs) == 0 {
-		return nil, nil
-	}
-	// fast path, ctx already done
+	// fast path
 	select {
 	case <-ctx.Done():
 		errs := make([]error, 0, len(brs))
@@ -187,6 +184,9 @@ func (c *Combiner) RaceWithContext(
 		}
 		return nil, errs
 	default:
+	}
+	if len(brs) == 0 {
+		return nil, nil
 	}
 
 	errs := make([]error, len(brs))
@@ -268,10 +268,8 @@ func (c *Combiner) Every(brs []e.BatchResult) ([]interface{}, []error) {
 // to use `Every` call instead, as it has less allocations (so it is faster)
 func (c *Combiner) EveryWithContext(
 	ctx context.Context, brs []e.BatchResult) ([]interface{}, []error) {
-	if len(brs) == 0 {
-		return nil, nil
-	}
-	// fast path, ctx already done
+
+	// fast path
 	select {
 	case <-ctx.Done():
 		errs := make([]error, 0, len(brs))
@@ -280,6 +278,9 @@ func (c *Combiner) EveryWithContext(
 		}
 		return nil, errs
 	default:
+	}
+	if len(brs) == 0 {
+		return nil, nil
 	}
 
 	results := make([]interface{}, len(brs))
