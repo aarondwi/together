@@ -20,6 +20,8 @@ func BenchmarkEngineWithCtx_Parallel256(b *testing.B) {
 	}
 
 	b.SetParallelism(256)
+	b.ReportAllocs()
+	b.SetBytes(8)
 	b.RunParallel(func(pb *testing.PB) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
@@ -42,6 +44,8 @@ func BenchmarkEngineWithCtx_Parallel1024(b *testing.B) {
 	}
 
 	b.SetParallelism(1024)
+	b.ReportAllocs()
+	b.SetBytes(8)
 	b.RunParallel(func(pb *testing.PB) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
@@ -64,6 +68,8 @@ func BenchmarkEngineWithCtx_Parallel4096(b *testing.B) {
 	}
 
 	b.SetParallelism(4096)
+	b.ReportAllocs()
+	b.SetBytes(8)
 	b.RunParallel(func(pb *testing.PB) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {

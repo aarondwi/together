@@ -24,6 +24,8 @@ func BenchmarkCluster_Partition4_Parallel256(b *testing.B) {
 	}
 
 	b.SetParallelism(256)
+	b.ReportAllocs()
+	b.SetBytes(8)
 	b.RunParallel(func(pb *testing.PB) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
@@ -55,6 +57,8 @@ func BenchmarkCluster_Partition4_Parallel1024(b *testing.B) {
 	}
 
 	b.SetParallelism(1024)
+	b.ReportAllocs()
+	b.SetBytes(8)
 	b.RunParallel(func(pb *testing.PB) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
@@ -86,6 +90,8 @@ func BenchmarkCluster_Partition4_Parallel4096(b *testing.B) {
 	}
 
 	b.SetParallelism(4096)
+	b.ReportAllocs()
+	b.SetBytes(8)
 	b.RunParallel(func(pb *testing.PB) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
@@ -117,6 +123,8 @@ func BenchmarkCluster_Partition8_Parallel256(b *testing.B) {
 	}
 
 	b.SetParallelism(256)
+	b.ReportAllocs()
+	b.SetBytes(8)
 	b.RunParallel(func(pb *testing.PB) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
@@ -148,6 +156,8 @@ func BenchmarkCluster_Partition8_Parallel1024(b *testing.B) {
 	}
 
 	b.SetParallelism(1024)
+	b.ReportAllocs()
+	b.SetBytes(8)
 	b.RunParallel(func(pb *testing.PB) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
@@ -179,6 +189,8 @@ func BenchmarkCluster_Partition8_Parallel4096(b *testing.B) {
 	}
 
 	b.SetParallelism(4096)
+	b.ReportAllocs()
+	b.SetBytes(8)
 	b.RunParallel(func(pb *testing.PB) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
@@ -210,6 +222,8 @@ func BenchmarkCluster_Partition16_Parallel256(b *testing.B) {
 	}
 
 	b.SetParallelism(256)
+	b.ReportAllocs()
+	b.SetBytes(8)
 	b.RunParallel(func(pb *testing.PB) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
@@ -241,6 +255,8 @@ func BenchmarkCluster_Partition16_Parallel1024(b *testing.B) {
 	}
 
 	b.SetParallelism(1024)
+	b.ReportAllocs()
+	b.SetBytes(8)
 	b.RunParallel(func(pb *testing.PB) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {
@@ -272,6 +288,8 @@ func BenchmarkCluster_Partition16_Parallel4096(b *testing.B) {
 	}
 
 	b.SetParallelism(4096)
+	b.ReportAllocs()
+	b.SetBytes(8)
 	b.RunParallel(func(pb *testing.PB) {
 		i := rand.Int63n(1000000)
 		for pb.Next() {

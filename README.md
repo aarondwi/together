@@ -29,7 +29,7 @@ Actually, there is a prominent user of batching in OLTP scheme, that is, [GraphQ
 They can do it because each graphql request is basically a graph/tree request, meaning lots of data is ready to be queried at once. But it is still done on per request basis, which also means the previous 2 points still hold.
 
 In my opinion, the main reason batching is not usually done on OLTP scheme is there are no good libraries to help business app developers gather data across requests easily.
-It is a *tricky* problem, even for graphql library maintainer, which *only* do batching on per request basis, see [here](https://productionreadygraphql.com/blog/2020-05-21-graphql-to-sql/).
+It is a *tricky* problem (such as [here](https://stackoverflow.com/questions/64448256/grpc-accumulate-requests-from-multiple-clients)), and it still is even for graphql library maintainer, which *only* do batching on per request basis, see [here](https://xuorig.medium.com/the-graphql-dataloader-pattern-visualized-3064a00f319f).
 This library is an attempt to solve that, helping developers easily achieve high throughput plus backpressure ability to handle sudden surge.
 
 Installation
@@ -48,7 +48,7 @@ Features
 4. Circumvent single lock contention using `Cluster` implementation.
 5. Background waiting worker, so no goroutine creations on hot path (using tunable `WorkerPool`).
 6. Waiting multiple results at once, to reduce latency (Using `Combiner` implementation).
-7. Non-context and context variant available
+7. Non-context and context variant available.
 
 Usages
 -------------------------
@@ -59,7 +59,7 @@ Notes
 -------------------------
 
 1. By `batching`, it does not mean a batch processor like [gobatch](https://github.com/MasterOfBinary/gobatch),
-[spring batch](https://spring.io/projects/spring-batch), [dbt](https://www.getdbt.com/), [spark](https://spark.apache.org/), or anything like that. `Batching` here means aggregating multiple request into single request to backend, like how facebook manages its [memcache's flow](https://www.mimuw.edu.pl/~iwanicki/courses/ds/2016/presentations/08_Pawlowska.pdf).
+[spring batch](https://spring.io/projects/spring-batch), [dbt](https://www.getdbt.com/), [spark](https://spark.apache.org/), or anything like that. `Batching` here means aggregating/deduplicating multiple request into single request to backend, like how facebook manages its [memcache's flow](https://www.mimuw.edu.pl/~iwanicki/courses/ds/2016/presentations/08_Pawlowska.pdf).
 2. This is designed to be used in business-level OLTP code, so it is not aiming to be *every-last-cpu-cycle* optimized
 (in particular, this implementation use `interface{}`, until golang support generics).
 If you have something that can be solved with this pattern,
@@ -75,3 +75,9 @@ when keep going is dangerous for integrity, and the best solution is to just **c
 If you (or library you are using) still insist to use `panic`, please catch it and return error instead.
 5. Even though this library lets you easily batch your requests, be cautious with record locking/isolation level.
 One conflicting record may block/rollback entire batch.
+
+TODO: Nice to have
+-------------------------
+
+1. Dynamic concurrency limit, especially for number of worker goroutines. Based on upstream latency and/or work in queue.
+2. Add randomized sleep option, so a lot of done works not keep contending the next part.
