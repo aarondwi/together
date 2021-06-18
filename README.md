@@ -28,8 +28,8 @@ in low-throughput.
 Actually, there is a prominent user of batching in OLTP scheme, that is, [GraphQL](graphql.org) with its [Dataloader](https://github.com/graphql/dataloader) pattern.
 They can do it because each graphql request is basically a graph/tree request, meaning lots of data is ready to be queried at once. But it is still done on per request basis, which also means the previous 2 points still hold.
 
-In my opinion, the main reason batching is not usually done on OLTP scheme is there are no good libraries to help business app developers gather data across requests easily.
-It is a *tricky* problem (such as [here](https://stackoverflow.com/questions/64448256/grpc-accumulate-requests-from-multiple-clients)), and it still is even for graphql library maintainer, which *only* do batching on per request basis, see [here](https://xuorig.medium.com/the-graphql-dataloader-pattern-visualized-3064a00f319f).
+I believe the main reason batching is not usually done on OLTP scheme is this pattern not getting promoted much, so there are no good libraries to help business app developers gather data across requests easily.
+It is a *tricky* problem, even for graphql library maintainer, which *only* do batching on per request basis, see [here](https://xuorig.medium.com/the-graphql-dataloader-pattern-visualized-3064a00f319f).
 This library is an attempt to solve that, helping developers easily achieve high throughput plus backpressure ability to handle sudden surge.
 
 Installation
@@ -44,11 +44,12 @@ Features
 
 1. Small codebase (<1000 LoC).
 2. Fast. On 2 years old laptop with Intel Core-i7 8550u, with batch worker simulating network call by sleeping for 2ms, `Cluster` reaching ~2 million invocation/s.
-3. Easy API (just use `Submit` or equivalent call), and all params will be available to batch worker. You just need to return the call with same key as parameters.
+3. Easy API (just use `Submit` or equivalent call), and all params will be available to batch worker. You just need to return the call with same key as the given parameters.
 4. Circumvent single lock contention using `Cluster` implementation.
 5. Background waiting worker, so no goroutine creations on hot path (using tunable `WorkerPool`).
 6. Waiting multiple results at once, to reduce latency (Using `Combiner` implementation).
 7. Non-context and context variant available.
+8. Separating submitting and waiting results, to allow fire-and-forget cases.
 
 Usages
 -------------------------
