@@ -28,9 +28,7 @@ in low-throughput.
 Actually, there is a prominent user of batching in OLTP scheme, that is, [GraphQL](graphql.org) with its [Dataloader](https://github.com/graphql/dataloader) pattern.
 They can do it because each graphql request is basically a graph/tree request, meaning lots of data is ready to be queried at once. But it is still done on per request basis, which also means the previous 2 points still hold.
 
-I believe the main reason batching is not usually done on OLTP scheme is this pattern not getting promoted much, so there are no good libraries to help business app developers gather data across requests easily.
-It is a *tricky* problem, even for graphql library maintainer, which *only* do batching on per request basis, see [here](https://xuorig.medium.com/the-graphql-dataloader-pattern-visualized-3064a00f319f).
-This library is an attempt to solve that, helping developers easily achieve high throughput plus backpressure ability to handle sudden surge.
+This library is an attempt to make it easier to batch requests for interactive services, helping developers easily achieve high throughput plus backpressure ability to handle sudden surge.
 
 Installation
 -------------------------
@@ -48,7 +46,7 @@ Features
 4. Circumvent single lock contention using `Cluster` implementation.
 5. Background waiting worker, so no goroutine creations on hot path (using tunable `WorkerPool`).
 6. Waiting multiple results at once, to reduce latency (Using `Combiner` implementation).
-7. Non-context and context variant available.
+7. Non-context and context variant available. (for timeout-based or hedge-requests scenario)
 8. Separating submitting and waiting results, to allow fire-and-forget cases.
 
 Usages
