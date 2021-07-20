@@ -7,87 +7,131 @@ import (
 	e "github.com/aarondwi/together/engine"
 )
 
-/*
- * This sub-packages implement promise-like functionality for multiple BatchResults.
- * The goal is to allow users to reduce latency on a per request basis,
- * by doing all of them in parallel.
- *
- * Roughly adapted from https://github.com/chebyrash/promise/blob/master/promise.go,
- * with few semantic changes and optimization in place (especially with worker pool)
- *
- * Notes do to the nature of the problem,
- * this implementation has quite a few allocations on hot path.
- * Use this implementation sparingly.
- */
-
 type resolutionHelper struct {
 	index  int
 	result interface{}
 	err    error
 }
 
-// Combiner is our main struct
-// that exposes functions to wait multiple batchresult simultaneously
+// Combiner implements promise-like functionality for multiple BatchResults.
+// The goal is to allow users to reduce latency on a per request basis,
+// by doing all of them in parallel.
+//
+// Roughly adapted from https://github.com/chebyrash/promise/blob/master/promise.go,
+// with few semantic changes and optimization in place (especially with worker pool)
+//
+// If the given WorkerPool is nil, it will create a goroutine for each BatchResults given.
+// So it is recommended to supply a non-nil, big enough worker-pool.
+//
+// On every call, buffered channel is created, to prevent goroutine leak.
+//
+// Notes do to the nature of the problem,
+// this implementation has quite a few allocations on hot path.
+// Use this implementation sparingly.
 type Combiner struct {
 	wp *com.WorkerPool
 }
 
 // NewCombiner creates our combiner, given the WorkerPool.
-//
-// Notes that for the context idioms, you need to either separate the pool,
-// or create big enough pool for both combiner and batchresult.{something}WithContext.
-// Else, it may block forever
-func NewCombiner(wp *com.WorkerPool) (*Combiner, error) {
-	if wp == nil {
-		return nil, com.ErrNilWorkerPool
-	}
-	return &Combiner{wp: wp}, nil
+func NewCombiner(wp *com.WorkerPool) *Combiner {
+	return &Combiner{wp: wp}
 }
 
-// All waits for all BatchResult to be returned, or one error be returned.
+func (c *Combiner) applyWorker(
+	j int, br e.BatchResult,
+	ch chan<- resolutionHelper) {
+
+	res, err := br.GetResult()
+	if err != nil {
+		ch <- resolutionHelper{index: j, err: err}
+		return
+	}
+	ch <- resolutionHelper{index: j, result: res}
+}
+
+func (c *Combiner) apply(
+	brs []e.BatchResult, ch chan<- resolutionHelper) {
+
+	if c.wp == nil {
+		for i, br := range brs {
+			func(j int, br e.BatchResult) {
+				go c.applyWorker(j, br, ch)
+			}(i, br)
+		}
+	} else {
+		for i, br := range brs {
+			func(j int, br e.BatchResult) {
+				c.wp.Submit(func() {
+					c.applyWorker(j, br, ch)
+				})
+			}(i, br)
+		}
+	}
+}
+
+func (c *Combiner) applyWithCtxWorker(
+	ctx context.Context,
+	j int, br e.BatchResult,
+	ch chan<- resolutionHelper) {
+
+	res, err := br.GetResultWithContext(ctx)
+	if err != nil {
+		ch <- resolutionHelper{index: j, err: err}
+		return
+	}
+	ch <- resolutionHelper{index: j, result: res}
+}
+
+func (c *Combiner) applyWithCtx(
+	ctx context.Context,
+	brs []e.BatchResult, ch chan<- resolutionHelper) {
+
+	if c.wp == nil {
+		for i, br := range brs {
+			func(j int, br e.BatchResult) {
+				go c.applyWithCtxWorker(ctx, j, br, ch)
+			}(i, br)
+		}
+	} else {
+		for i, br := range brs {
+			func(j int, br e.BatchResult) {
+				c.wp.Submit(func() {
+					c.applyWithCtxWorker(ctx, j, br, ch)
+				})
+			}(i, br)
+		}
+	}
+}
+
+// AllSuccesses waits for all BatchResult to be returned, or one error be returned.
 //
-// If all succeed, this will return array of response in the same order as params, with nil error
+// If all succeed, this will return array of response in the same order as params, with nil error.
 // Else, it returns the first error only.
-func (c *Combiner) All(brs []e.BatchResult) ([]interface{}, error) {
+func (c *Combiner) AllSuccesses(brs []e.BatchResult) ([]interface{}, error) {
 	if len(brs) == 0 {
 		return nil, nil
 	}
 
 	results := make([]interface{}, len(brs))
-
-	// we buffer the channels, to prevent goroutine leak
-	resultCh := make(chan resolutionHelper, len(brs))
-	errCh := make(chan error, len(brs))
-
-	for i, br := range brs {
-		c.wp.Submit(func(j int, br e.BatchResult) func() {
-			return func() {
-				res, err := br.GetResult()
-				if err != nil {
-					errCh <- err
-					return
-				}
-				resultCh <- resolutionHelper{index: j, result: res}
-			}
-		}(i, br))
-	}
+	ch := make(chan resolutionHelper, len(brs))
+	c.apply(brs, ch)
 
 	for i := 0; i < len(brs); i++ {
-		select {
-		case resHelper := <-resultCh:
+		resHelper := <-ch
+		if resHelper.result != nil {
 			results[resHelper.index] = resHelper.result
-		case err := <-errCh:
-			return nil, err
+		} else {
+			return nil, resHelper.err
 		}
 	}
 	return results, nil
 }
 
-// AllWithContext is the same as `All` call, but with context idiom.
+// AllSuccessesWithContext is the same as `All` call, but with context idiom.
 //
 // Note unless you need the context idiom, it is preferable
 // to use `All` call instead, as it has less allocations (so it is faster)
-func (c *Combiner) AllWithContext(
+func (c *Combiner) AllSuccessesWithContext(
 	ctx context.Context, brs []e.BatchResult) ([]interface{}, error) {
 
 	// fast path
@@ -101,30 +145,15 @@ func (c *Combiner) AllWithContext(
 	}
 
 	results := make([]interface{}, len(brs))
-
-	// we buffer the channels, to prevent goroutine leak
-	resultCh := make(chan resolutionHelper, len(brs))
-	errCh := make(chan error, len(brs))
-
-	for i, br := range brs {
-		c.wp.Submit(func(ctx context.Context, j int, br e.BatchResult) func() {
-			return func() {
-				res, err := br.GetResultWithContext(ctx)
-				if err != nil {
-					errCh <- err
-					return
-				}
-				resultCh <- resolutionHelper{index: j, result: res}
-			}
-		}(ctx, i, br))
-	}
+	ch := make(chan resolutionHelper, len(brs))
+	c.applyWithCtx(ctx, brs, ch)
 
 	for i := 0; i < len(brs); i++ {
-		select {
-		case resHelper := <-resultCh:
+		resHelper := <-ch
+		if resHelper.result != nil {
 			results[resHelper.index] = resHelper.result
-		case err := <-errCh:
-			return nil, err
+		} else {
+			return nil, resHelper.err
 		}
 	}
 	return results, nil
@@ -139,29 +168,15 @@ func (c *Combiner) Race(brs []e.BatchResult) (interface{}, []error) {
 	}
 
 	errs := make([]error, len(brs))
-	// we buffer the channels, to prevent goroutine leak
-	resultCh := make(chan interface{}, len(brs))
-	errCh := make(chan resolutionHelper, len(brs))
-
-	for i, br := range brs {
-		c.wp.Submit(func(j int, br e.BatchResult) func() {
-			return func() {
-				res, err := br.GetResult()
-				if err != nil {
-					errCh <- resolutionHelper{index: j, err: err}
-					return
-				}
-				resultCh <- res
-			}
-		}(i, br))
-	}
+	ch := make(chan resolutionHelper, len(brs))
+	c.apply(brs, ch)
 
 	for i := 0; i < len(brs); i++ {
-		select {
-		case result := <-resultCh:
-			return result, nil
-		case resHelper := <-errCh:
+		resHelper := <-ch
+		if resHelper.err != nil {
 			errs[resHelper.index] = resHelper.err
+		} else {
+			return resHelper.result, nil
 		}
 	}
 
@@ -190,30 +205,15 @@ func (c *Combiner) RaceWithContext(
 	}
 
 	errs := make([]error, len(brs))
-
-	// we buffer the channels, to prevent goroutine leak
-	resultCh := make(chan interface{}, len(brs))
-	errCh := make(chan resolutionHelper, len(brs))
-
-	for i, br := range brs {
-		c.wp.Submit(func(ctx context.Context, j int, br e.BatchResult) func() {
-			return func() {
-				res, err := br.GetResultWithContext(ctx)
-				if err != nil {
-					errCh <- resolutionHelper{index: j, err: err}
-					return
-				}
-				resultCh <- res
-			}
-		}(ctx, i, br))
-	}
+	ch := make(chan resolutionHelper, len(brs))
+	c.applyWithCtx(ctx, brs, ch)
 
 	for i := 0; i < len(brs); i++ {
-		select {
-		case result := <-resultCh:
-			return result, nil
-		case resHelper := <-errCh:
+		resHelper := <-ch
+		if resHelper.err != nil {
 			errs[resHelper.index] = resHelper.err
+		} else {
+			return resHelper.result, nil
 		}
 	}
 
@@ -231,32 +231,17 @@ func (c *Combiner) Every(brs []e.BatchResult) ([]interface{}, []error) {
 
 	results := make([]interface{}, len(brs))
 	errs := make([]error, len(brs))
-
-	// we buffer the channels, to prevent goroutine leak
-	resultCh := make(chan resolutionHelper, len(brs))
-	errCh := make(chan resolutionHelper, len(brs))
-
-	for i, br := range brs {
-		c.wp.Submit(func(j int, br e.BatchResult) func() {
-			return func() {
-				res, err := br.GetResult()
-				if err != nil {
-					errCh <- resolutionHelper{index: j, err: err}
-					return
-				}
-				resultCh <- resolutionHelper{index: j, result: res}
-			}
-		}(i, br))
-	}
+	ch := make(chan resolutionHelper, len(brs))
+	c.apply(brs, ch)
 
 	for i := 0; i < len(brs); i++ {
-		select {
-		case resHelper := <-resultCh:
+		resHelper := <-ch
+		if resHelper.result != nil {
 			results[resHelper.index] = resHelper.result
 			errs[resHelper.index] = nil
-		case errHelper := <-errCh:
-			results[errHelper.index] = nil
-			errs[errHelper.index] = errHelper.err
+		} else {
+			results[resHelper.index] = nil
+			errs[resHelper.index] = resHelper.err
 		}
 	}
 	return results, errs
@@ -285,32 +270,17 @@ func (c *Combiner) EveryWithContext(
 
 	results := make([]interface{}, len(brs))
 	errs := make([]error, len(brs))
-
-	// we buffer the channels, to prevent goroutine leak
-	resultCh := make(chan resolutionHelper, len(brs))
-	errCh := make(chan resolutionHelper, len(brs))
-
-	for i, br := range brs {
-		c.wp.Submit(func(ctx context.Context, j int, br e.BatchResult) func() {
-			return func() {
-				res, err := br.GetResultWithContext(ctx)
-				if err != nil {
-					errCh <- resolutionHelper{index: j, err: err}
-					return
-				}
-				resultCh <- resolutionHelper{index: j, result: res}
-			}
-		}(ctx, i, br))
-	}
+	ch := make(chan resolutionHelper, len(brs))
+	c.applyWithCtx(ctx, brs, ch)
 
 	for i := 0; i < len(brs); i++ {
-		select {
-		case resHelper := <-resultCh:
+		resHelper := <-ch
+		if resHelper.result != nil {
 			results[resHelper.index] = resHelper.result
 			errs[resHelper.index] = nil
-		case errHelper := <-errCh:
-			results[errHelper.index] = nil
-			errs[errHelper.index] = errHelper.err
+		} else {
+			results[resHelper.index] = nil
+			errs[resHelper.index] = resHelper.err
 		}
 	}
 	return results, errs

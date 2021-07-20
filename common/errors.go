@@ -28,9 +28,3 @@ var ErrNilPartitionerFunc = errors.New(
 // when given numOfWorker is <= zero
 var ErrNumOfWorkerLessThanEqualZero = errors.New(
 	"numOfWorker is expected to be > 0")
-
-// ErrNilWorkerPool is returned
-// when function that needs background goroutine to wait
-// is called without initializing worker pool
-var ErrNilWorkerPool = errors.New(
-	"Nil Worker pool. Can't use this functionality")

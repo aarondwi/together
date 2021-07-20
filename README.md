@@ -40,14 +40,15 @@ go get -u github.com/aarondwi/together
 Features
 -------------------------
 
-1. Small codebase (<1000 LoC).
-2. Fast. On 2 years old laptop with Intel Core-i7 8550u, with batch worker simulating network call by sleeping for 2ms, `Cluster` reaching ~2 million invocation/s.
-3. Easy API (just use `Submit` or equivalent call), and all params will be available to batch worker. You just need to return the call with same key as the given parameters.
-4. Circumvent single lock contention using `Cluster` implementation.
-5. Background waiting worker, so no goroutine creations on hot path (using tunable `WorkerPool`).
-6. Waiting multiple results at once, to reduce latency (Using `Combiner` implementation).
-7. Non-context and context variant available. (for timeout-based or hedge-requests scenario)
-8. Separating submitting and waiting results, to allow fire-and-forget cases.
+1. Small and clear codebase (<1000 LoC), excluding tests.
+2. General enough to be used for any batching case, and can easily be abstracted higher.
+3. Fast. On 2 years old laptop with Intel Core-i7 8550u, with batch worker simulating network call by sleeping for 2ms, `Cluster` reaching ~2 million invocation/s.
+4. Easy API (just use `Submit` or equivalent call), and all params will be available to batch worker. You just need to return the call with same key as the given parameters.
+5. Circumvent single lock contention using `Cluster` implementation.
+6. Optional background worker, so no goroutine creations on hot path (using tunable `WorkerPool`).
+7. Waiting multiple results at once, to reduce latency (Using `Combiner` implementation).
+8. Non-context and context variant available. (for timeout-based, hedge-requests, etc)
+9. Separating submitting and waiting results, to allow fire-and-forget cases.
 
 Usages
 -------------------------
@@ -58,7 +59,7 @@ Notes
 -------------------------
 
 1. By `batching`, it does not mean a batch processor like [gobatch](https://github.com/MasterOfBinary/gobatch),
-[spring batch](https://spring.io/projects/spring-batch), [dbt](https://www.getdbt.com/), [spark](https://spark.apache.org/), or anything like that. `Batching` here means aggregating/deduplicating multiple request into single request to backend, like how facebook manages its [memcache's flow](https://www.mimuw.edu.pl/~iwanicki/courses/ds/2016/presentations/08_Pawlowska.pdf).
+[spring batch](https://spring.io/projects/spring-batch), [dbt](https://www.getdbt.com/), [spark](https://spark.apache.org/), or anything like that. `Batching` here means aggregating/deduplicating multiple request into single request to backend, like how Facebook manages its [memcache's flow](https://www.mimuw.edu.pl/~iwanicki/courses/ds/2016/presentations/08_Pawlowska.pdf) or Quora with their [asynq](https://github.com/quora/asynq).
 2. This is designed to be used in business-level OLTP code, so it is not aiming to be *every-last-cpu-cycle* optimized
 (in particular, this implementation use `interface{}`, until golang support generics).
 If you have something that can be solved with this pattern,
