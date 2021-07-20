@@ -76,7 +76,7 @@ func (br *BatchResult) GetResult() (interface{}, error) {
 //
 // Note that unless you need to use the context idiom, it is recommended
 // to use `GetResult()` call instead, as it has much, much less allocation (only interface{} typecasting).
-// This API need to create another goroutine, and 2 channels to manage its functionality.
+// This API need to create another goroutine (if Workerpool is nil), and 2 channels to manage its functionality.
 // (And of course, using context's `WithCancel` or `WithTimeout` also creates goroutines)
 //
 // Beware that because how go handles local variable,
@@ -93,28 +93,18 @@ func (br *BatchResult) GetResultWithContext(
 	default:
 	}
 
-	if br.batch.wp == nil {
-		return nil, com.ErrNilWorkerPool
-	}
-
 	// size 1, prevent goroutine leak
 	// if either the context or the other goroutine done first
 	resultCh := make(chan interface{}, 1)
 	errCh := make(chan error, 1)
 
-	br.batch.wp.Submit(
-		func(resultCh chan interface{},
-			errCh chan error) func() {
-			return func() {
-				res, err := br.GetResult()
-				br.batch = nil
-				if err != nil {
-					errCh <- err
-					return
-				}
-				resultCh <- res
-			}
-		}(resultCh, errCh))
+	if br.batch.wp == nil {
+		go br.futureWorker(resultCh, errCh)
+	} else {
+		br.batch.wp.Submit(func() {
+			br.futureWorker(resultCh, errCh)
+		})
+	}
 
 	select {
 	case <-ctx.Done():
@@ -124,4 +114,16 @@ func (br *BatchResult) GetResultWithContext(
 	case err := <-errCh:
 		return nil, err
 	}
+}
+
+func (br *BatchResult) futureWorker(
+	resultCh chan interface{},
+	errCh chan error) {
+	res, err := br.GetResult()
+	br.batch = nil
+	if err != nil {
+		errCh <- err
+		return
+	}
+	resultCh <- res
 }

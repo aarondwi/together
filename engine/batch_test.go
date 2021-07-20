@@ -85,9 +85,13 @@ func TestBatchGetResultWithCtx(t *testing.T) {
 	}
 
 	b.wp = nil
-	br4 := BatchResult{id: 11, batch: b}
-	_, err = br4.GetResultWithContext(context.Background())
-	if err == nil || err != com.ErrNilWorkerPool {
-		log.Fatalf("err should be ErrNilWorkerPool, but instead we got %v", err)
+	b.err = nil
+	br4 := BatchResult{id: 10, batch: b}
+	res, err = br4.GetResultWithContext(context.Background())
+	if err != nil {
+		log.Fatalf("should not error because no error, but we got %v", err)
+	}
+	if res.(int) != 2 {
+		log.Fatalf("We should receive 2, but instead we got %d", res.(int))
 	}
 }
