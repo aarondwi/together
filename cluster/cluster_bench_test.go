@@ -8,9 +8,8 @@ import (
 	c "github.com/aarondwi/together/common"
 )
 
-var wp_cbt = c.GetDefaultWorkerPool()
-
 func BenchmarkCluster_Partition4_Parallel256(b *testing.B) {
+	var wp_cbt = c.GetDefaultWorkerPool()
 	c, err := NewCluster(
 		// cluster params
 		c.PARTITION_4, c.GetDefaultPartitioner(c.PARTITION_4),
@@ -43,6 +42,7 @@ func BenchmarkCluster_Partition4_Parallel256(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition4_Parallel1024(b *testing.B) {
+	var wp_cbt = c.GetDefaultWorkerPool()
 	c, err := NewCluster(
 		// cluster params
 		c.PARTITION_4, c.GetDefaultPartitioner(c.PARTITION_4),
@@ -76,6 +76,7 @@ func BenchmarkCluster_Partition4_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition4_Parallel4096(b *testing.B) {
+	var wp_cbt = c.GetDefaultWorkerPool()
 	c, err := NewCluster(
 		// cluster params
 		c.PARTITION_4, c.GetDefaultPartitioner(c.PARTITION_4),
@@ -109,6 +110,7 @@ func BenchmarkCluster_Partition4_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition8_Parallel256(b *testing.B) {
+	var wp_cbt = c.GetDefaultWorkerPool()
 	c, err := NewCluster(
 		// cluster params
 		c.PARTITION_8, c.GetDefaultPartitioner(c.PARTITION_8),
@@ -142,6 +144,7 @@ func BenchmarkCluster_Partition8_Parallel256(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition8_Parallel1024(b *testing.B) {
+	var wp_cbt = c.GetDefaultWorkerPool()
 	c, err := NewCluster(
 		// cluster params
 		c.PARTITION_8, c.GetDefaultPartitioner(c.PARTITION_8),
@@ -175,6 +178,7 @@ func BenchmarkCluster_Partition8_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition8_Parallel4096(b *testing.B) {
+	var wp_cbt = c.GetDefaultWorkerPool()
 	c, err := NewCluster(
 		// cluster params
 		c.PARTITION_8, c.GetDefaultPartitioner(c.PARTITION_8),
@@ -208,6 +212,7 @@ func BenchmarkCluster_Partition8_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition16_Parallel256(b *testing.B) {
+	var wp_cbt = c.GetDefaultWorkerPool()
 	c, err := NewCluster(
 		// cluster params
 		c.PARTITION_16, c.GetDefaultPartitioner(c.PARTITION_16),
@@ -241,6 +246,7 @@ func BenchmarkCluster_Partition16_Parallel256(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition16_Parallel1024(b *testing.B) {
+	var wp_cbt = c.GetDefaultWorkerPool()
 	c, err := NewCluster(
 		// cluster params
 		c.PARTITION_16, c.GetDefaultPartitioner(c.PARTITION_16),
@@ -274,6 +280,7 @@ func BenchmarkCluster_Partition16_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition16_Parallel4096(b *testing.B) {
+	var wp_cbt = c.GetDefaultWorkerPool()
 	c, err := NewCluster(
 		// cluster params
 		c.PARTITION_16, c.GetDefaultPartitioner(c.PARTITION_16),

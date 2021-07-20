@@ -71,9 +71,9 @@ Other complex implementation have their own downsides, such as:
     * getting from the queue and working the batch as fast as possible, like in [Tarantool](https://dzone.com/articles/asynchronous-processing-with-in-memory-databases-o) or [Aurora](https://www.semanticscholar.org/paper/Amazon-Aurora%3A-On-Avoiding-Distributed-Consensus-Verbitski-Gupta/fa4a2b8ab110472c6d8b1b19baa81af21800468b), may results in better throughput/latency overall, but not as useful for the saving goal.
 4. This library will never include `panic` handling, because IMO, it is a bad practice. `panic` should only be used
 when keep going is dangerous for integrity, and the best solution is to just **crash**.
-If you (or library you are using) still insist to use `panic`, please catch it and return error instead.
+If you (or library you are using) still insist to use `panic`, please recover it and return error instead.
 5. Even though this library lets you easily batch your requests, be cautious with record locking/isolation level.
-One conflicting record may block/rollback entire batch.
+One conflicting record may **block/rollback** entire batch.
 
 TODO: Nice to have
 -------------------------

@@ -8,9 +8,8 @@ import (
 	c "github.com/aarondwi/together/common"
 )
 
-var wp_ebt = c.GetDefaultWorkerPool()
-
 func BenchmarkEngine_Parallel256(b *testing.B) {
+	var wp_ebt = c.GetDefaultWorkerPool()
 	e, err := NewEngine(
 		c.NUM_OF_WORKER, c.NUM_OF_ARGS_TO_WAIT,
 		c.SLEEP_DURATION, c.BatchFunc, wp_ebt)
@@ -35,6 +34,7 @@ func BenchmarkEngine_Parallel256(b *testing.B) {
 }
 
 func BenchmarkEngine_Parallel1024(b *testing.B) {
+	var wp_ebt = c.GetDefaultWorkerPool()
 	e, err := NewEngine(
 		c.NUM_OF_WORKER, c.NUM_OF_ARGS_TO_WAIT,
 		c.SLEEP_DURATION, c.BatchFunc, wp_ebt)
@@ -59,6 +59,7 @@ func BenchmarkEngine_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkEngine_Parallel4096(b *testing.B) {
+	var wp_ebt = c.GetDefaultWorkerPool()
 	e, err := NewEngine(
 		c.NUM_OF_WORKER, c.NUM_OF_ARGS_TO_WAIT,
 		c.SLEEP_DURATION, c.BatchFunc, wp_ebt)
