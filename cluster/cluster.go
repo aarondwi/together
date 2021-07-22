@@ -1,8 +1,6 @@
 package cluster
 
 import (
-	"time"
-
 	com "github.com/aarondwi/together/common"
 	e "github.com/aarondwi/together/engine"
 )
@@ -35,9 +33,7 @@ func NewCluster(
 	partitioner func(arg interface{}) int,
 
 	// engine params
-	numOfWorker int,
-	argSizeLimit int,
-	waitDuration time.Duration,
+	ec e.EngineConfig,
 	fn e.WorkerFn,
 	wp *com.WorkerPool) (*Cluster, error) {
 
@@ -48,8 +44,11 @@ func NewCluster(
 	engines := make([]*e.Engine, 0, numOfPartition)
 	for i := 0; i < numOfPartition; i++ {
 		e, err := e.NewEngine(
-			numOfWorker, argSizeLimit,
-			waitDuration, fn, wp)
+			e.EngineConfig{
+				NumOfWorker:  ec.NumOfWorker,
+				ArgSizeLimit: ec.ArgSizeLimit,
+				WaitDuration: ec.WaitDuration},
+			fn, wp)
 		if err != nil {
 			return nil, err
 		}

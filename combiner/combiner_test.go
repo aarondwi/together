@@ -23,7 +23,10 @@ func TestAllSuccesses(t *testing.T) {
 	}
 
 	e1, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 
@@ -52,7 +55,10 @@ func TestAllSuccesses(t *testing.T) {
 	}
 
 	e2, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
@@ -75,7 +81,10 @@ func TestAllSuccessesNilWorkerPool(t *testing.T) {
 	}
 
 	e1, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 
@@ -104,7 +113,10 @@ func TestAllSuccessesNilWorkerPool(t *testing.T) {
 	}
 
 	e2, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
@@ -134,7 +146,10 @@ func TestAllSuccessesWithCtx(t *testing.T) {
 	}
 
 	e1, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			res := make(map[uint64]interface{})
@@ -163,7 +178,10 @@ func TestAllSuccessesWithCtx(t *testing.T) {
 	}
 
 	e2, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
@@ -193,7 +211,10 @@ func TestAllSuccessesWithCtxNilWorkerPool(t *testing.T) {
 	}
 
 	e1, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			res := make(map[uint64]interface{})
@@ -222,7 +243,10 @@ func TestAllSuccessesWithCtxNilWorkerPool(t *testing.T) {
 	}
 
 	e2, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
@@ -244,7 +268,10 @@ func TestRace(t *testing.T) {
 		log.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
 	}
 	e1, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			time.Sleep(10 * time.Millisecond)
@@ -255,13 +282,19 @@ func TestRace(t *testing.T) {
 			return res, nil
 		}, wp)
 	e2, _ := e.NewEngine(
-		1, 10, time.Duration(1*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
 		}, wp)
 	e3, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			time.Sleep(1 * time.Millisecond)
@@ -274,7 +307,10 @@ func TestRace(t *testing.T) {
 
 	ErrTest2 := errors.New("")
 	e4, _ := e.NewEngine(
-		1, 10, time.Duration(1*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			time.Sleep(5 * time.Millisecond)
@@ -312,7 +348,10 @@ func TestRaceNilWorkerPool(t *testing.T) {
 		log.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
 	}
 	e1, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			time.Sleep(10 * time.Millisecond)
@@ -323,13 +362,19 @@ func TestRaceNilWorkerPool(t *testing.T) {
 			return res, nil
 		}, nil)
 	e2, _ := e.NewEngine(
-		1, 10, time.Duration(1*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
 		}, nil)
 	e3, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			time.Sleep(1 * time.Millisecond)
@@ -342,7 +387,10 @@ func TestRaceNilWorkerPool(t *testing.T) {
 
 	ErrTest2 := errors.New("")
 	e4, _ := e.NewEngine(
-		1, 10, time.Duration(1*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			time.Sleep(5 * time.Millisecond)
@@ -389,7 +437,10 @@ func TestRaceWithCtx(t *testing.T) {
 	}
 
 	e1, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			time.Sleep(10 * time.Millisecond)
@@ -400,13 +451,19 @@ func TestRaceWithCtx(t *testing.T) {
 			return res, nil
 		}, wp)
 	e2, _ := e.NewEngine(
-		1, 10, time.Duration(1*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
 		}, wp)
 	e3, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			time.Sleep(1 * time.Millisecond)
@@ -419,7 +476,10 @@ func TestRaceWithCtx(t *testing.T) {
 
 	ErrTest2 := errors.New("")
 	e4, _ := e.NewEngine(
-		1, 10, time.Duration(1*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			time.Sleep(5 * time.Millisecond)
@@ -468,7 +528,10 @@ func TestRaceWithCtxNilWorkerPool(t *testing.T) {
 	}
 
 	e1, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			time.Sleep(10 * time.Millisecond)
@@ -479,13 +542,19 @@ func TestRaceWithCtxNilWorkerPool(t *testing.T) {
 			return res, nil
 		}, nil)
 	e2, _ := e.NewEngine(
-		1, 10, time.Duration(1*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
 		}, nil)
 	e3, _ := e.NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			time.Sleep(1 * time.Millisecond)
@@ -498,7 +567,10 @@ func TestRaceWithCtxNilWorkerPool(t *testing.T) {
 
 	ErrTest2 := errors.New("")
 	e4, _ := e.NewEngine(
-		1, 10, time.Duration(1*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			time.Sleep(5 * time.Millisecond)
@@ -538,7 +610,10 @@ func TestEvery(t *testing.T) {
 		log.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
 	}
 	e1, _ := e.NewEngine(
-		1, 10, time.Duration(2*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(2 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			res := make(map[uint64]interface{})
@@ -548,7 +623,10 @@ func TestEvery(t *testing.T) {
 			return res, nil
 		}, wp)
 	e2, _ := e.NewEngine(
-		1, 10, time.Duration(1*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
@@ -582,7 +660,10 @@ func TestEveryNilWorkerPool(t *testing.T) {
 		log.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
 	}
 	e1, _ := e.NewEngine(
-		1, 10, time.Duration(2*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(2 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			res := make(map[uint64]interface{})
@@ -592,7 +673,10 @@ func TestEveryNilWorkerPool(t *testing.T) {
 			return res, nil
 		}, nil)
 	e2, _ := e.NewEngine(
-		1, 10, time.Duration(1*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
@@ -635,7 +719,10 @@ func TestEveryWithCtx(t *testing.T) {
 	}
 
 	e1, _ := e.NewEngine(
-		1, 10, time.Duration(2*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(2 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			res := make(map[uint64]interface{})
@@ -645,7 +732,10 @@ func TestEveryWithCtx(t *testing.T) {
 			return res, nil
 		}, wp)
 	e2, _ := e.NewEngine(
-		1, 10, time.Duration(1*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return nil, ErrTest
@@ -688,7 +778,10 @@ func TestEveryWithCtxNilWorkerPool(t *testing.T) {
 	}
 
 	e1, _ := e.NewEngine(
-		1, 10, time.Duration(2*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(2 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			res := make(map[uint64]interface{})
@@ -698,7 +791,10 @@ func TestEveryWithCtxNilWorkerPool(t *testing.T) {
 			return res, nil
 		}, nil)
 	e2, _ := e.NewEngine(
-		1, 10, time.Duration(1*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  1,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return nil, ErrTest

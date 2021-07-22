@@ -45,19 +45,24 @@ type Engine struct {
 	wp           *com.WorkerPool
 }
 
-// NewEngine creates the engine with specified config
+// EngineConfig is the config object for our engine
+type EngineConfig struct {
+	NumOfWorker  int
+	ArgSizeLimit int
+	WaitDuration time.Duration
+}
+
+// NewEngine creates the engine based on the given EngineConfig
 //
 // The given `fn` should be goroutine-safe
 func NewEngine(
-	numOfWorker int,
-	argSizeLimit int,
-	waitDuration time.Duration,
+	ec EngineConfig,
 	fn WorkerFn,
 	wp *com.WorkerPool) (*Engine, error) {
-	if numOfWorker <= 0 {
+	if ec.NumOfWorker <= 0 {
 		return nil, com.ErrNumOfWorkerLessThanEqualZero
 	}
-	if argSizeLimit <= 1 {
+	if ec.ArgSizeLimit <= 1 {
 		return nil, ErrArgSizeLimitLessThanEqualOne
 	}
 	if fn == nil {
@@ -71,12 +76,12 @@ func NewEngine(
 		fn:       fn,
 
 		// we allow one buffer for each worker
-		batchChan:    make(chan *Batch, numOfWorker),
-		argSizeLimit: argSizeLimit,
-		waitDuration: waitDuration,
+		batchChan:    make(chan *Batch, ec.NumOfWorker),
+		argSizeLimit: ec.ArgSizeLimit,
+		waitDuration: ec.WaitDuration,
 		wp:           wp,
 	}
-	for i := 0; i < numOfWorker; i++ {
+	for i := 0; i < ec.NumOfWorker; i++ {
 		go e.worker()
 	}
 	go e.timeoutWatchdog()

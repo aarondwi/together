@@ -15,7 +15,7 @@ func TestEngine(t *testing.T) {
 	valShouldFail := 13
 	globalCount := 0
 	e, err := NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		EngineConfig{1, 10, time.Duration(5 * time.Millisecond)},
 		// notes that in real usage
 		// usually you won't just doing in-memory operation
 		// but rather, doing a network call
@@ -69,7 +69,7 @@ func TestEngineReturnsError(t *testing.T) {
 	var wp, _ = com.NewWorkerPool(4, 10)
 	ErrTest := errors.New("")
 	e, err := NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		EngineConfig{1, 10, time.Duration(5 * time.Millisecond)},
 		// notes that in real usage
 		// usually you won't just doing in-memory operation
 		// but rather, doing a network call
@@ -98,17 +98,23 @@ func TestEngineReturnsError(t *testing.T) {
 
 func TestEngineValidation(t *testing.T) {
 	var wp, _ = com.NewWorkerPool(4, 10)
-	_, err := NewEngine(-1, 10, time.Duration(time.Second), nil, wp)
+	_, err := NewEngine(
+		EngineConfig{-1, 10, time.Duration(time.Second)},
+		nil, wp)
 	if err == nil || err != com.ErrNumOfWorkerLessThanEqualZero {
 		log.Fatal("Should fail cause numOfWorker <= 0, but it is not")
 	}
 
-	_, err = NewEngine(1, -1, time.Duration(time.Second), nil, wp)
+	_, err = NewEngine(
+		EngineConfig{1, -1, time.Duration(time.Second)},
+		nil, wp)
 	if err == nil || err != ErrArgSizeLimitLessThanEqualOne {
 		log.Fatal("Should fail cause argSizeLimit <= 1, but it is not")
 	}
 
-	_, err = NewEngine(1, 2, time.Duration(time.Second), nil, wp)
+	_, err = NewEngine(
+		EngineConfig{1, 2, time.Duration(time.Second)},
+		nil, wp)
 	if err == nil || err != ErrNilWorkerFn {
 		log.Fatal("Should fail cause nil workerFn, but it is not")
 	}

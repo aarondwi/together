@@ -16,7 +16,7 @@ func TestEngineWithCtx(t *testing.T) {
 	valShouldFail := 18
 	globalCount := 0
 	e, err := NewEngine(
-		1, 10, time.Duration(5*time.Millisecond),
+		EngineConfig{1, 10, time.Duration(5 * time.Millisecond)},
 		// notes that in real usage
 		// usually you won't just doing in-memory operation
 		// but rather, doing a network call
@@ -79,7 +79,7 @@ func TestEngineCtxReturnsError(t *testing.T) {
 	var wp, _ = com.NewWorkerPool(4, 10)
 	ErrTest := errors.New("")
 	e, err := NewEngine(
-		1, 10, time.Duration(1*time.Millisecond),
+		EngineConfig{1, 10, time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			// gives us time to cancel the ctx first

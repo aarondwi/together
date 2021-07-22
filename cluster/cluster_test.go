@@ -11,12 +11,24 @@ import (
 
 func TestClusterValidation(t *testing.T) {
 	var wp, _ = com.NewWorkerPool(4, 10)
-	_, err := NewCluster(1, nil, 2, 10, time.Duration(time.Second), nil, wp)
+	_, err := NewCluster(
+		1, nil,
+		e.EngineConfig{
+			NumOfWorker:  2,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(time.Second)},
+		nil, wp)
 	if err == nil || err != com.ErrPartitionNumberTooLow {
 		log.Fatal("Should return ErrPartitionNumberTooLow cause only given 1, but it is not")
 	}
 
-	_, err = NewCluster(2, nil, 2, 10, time.Duration(time.Second), nil, wp)
+	_, err = NewCluster(
+		2, nil,
+		e.EngineConfig{
+			NumOfWorker:  2,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(time.Second)},
+		nil, wp)
 	if err == nil || err != e.ErrNilWorkerFn {
 		log.Fatal("Should return ErrNilWorkerFn cause given nil, but it is not")
 	}
@@ -24,10 +36,11 @@ func TestClusterValidation(t *testing.T) {
 
 func TestClusterSubmitNilPartitionerFn(t *testing.T) {
 	c, err := NewCluster(
-		// cluster params
 		2, nil,
-		// per-engine param
-		2, 10, time.Duration(time.Second),
+		e.EngineConfig{
+			NumOfWorker:  2,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(time.Second)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return m, nil
@@ -44,12 +57,13 @@ func TestClusterSubmitNilPartitionerFn(t *testing.T) {
 
 func TestClusterSubmitOutsideRange(t *testing.T) {
 	c, err := NewCluster(
-		// cluster params
 		2, func(arg interface{}) int {
 			return 2
 		},
-		// per-engine param
-		2, 10, time.Duration(time.Second),
+		e.EngineConfig{
+			NumOfWorker:  2,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(time.Second)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return m, nil
@@ -71,12 +85,13 @@ func TestClusterSubmitOutsideRange(t *testing.T) {
 
 func TestClusterSubmit(t *testing.T) {
 	c, err := NewCluster(
-		// cluster params
 		2, func(arg interface{}) int {
 			return arg.(int)
 		},
-		// per-engine param
-		2, 10, time.Duration(5*time.Millisecond),
+		e.EngineConfig{
+			NumOfWorker:  2,
+			ArgSizeLimit: 10,
+			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			return m, nil
