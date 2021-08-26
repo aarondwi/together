@@ -79,5 +79,8 @@ One conflicting record may **block/rollback** entire batch.
 TODO: Nice to have
 -------------------------
 
-1. Dynamic concurrency limit, especially for number of worker goroutines. Based on upstream latency and/or work in queue.
-2. Add randomized sleep option, so a lot of done works not keep contending the next part.
+1. Dynamic concurrency limit, especially for number of worker goroutines. Based on upstream latency and/or work in queue, or even custom (?).
+2. Add randomized sleep option, so a lot of done works not keep contending the next part (?).
+3. Add `SubmitMany` call, that put many params with one lock call only.
+4. Add per result own error, rather than only global one.
+5. Move to generic, once golang supports it.
