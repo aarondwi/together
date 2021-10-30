@@ -1,6 +1,6 @@
 # together
 
-Easily combine/dedup/scatter-gather your OLTP code, enjoy the performance.
+Runs your business logic **together**, enjoy the performance.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -12,7 +12,7 @@ Calling these upstreams for every single request means paying everything multipl
 This means CPU and time are used more on the expensive stuff, instead of the more important business logic stuff.
 
 Human themselves usually can't spot the difference between 5ms and 10, 50, 100, or even 200ms.
-So the option to batch interactive, OLTP-style requests to achieve more throughtput is interesting,
+So the option to combine interactive, OLTP-style requests to achieve more throughtput is interesting,
 and most data store (database, queue, 3rd party API, etc) already have batching capability (such as `group commit`, `insert multiple`, `update join`, `select in`, and their equivalents). This also basically changes I/O-heavy to CPU-heavy stuff, which is far easier to optimize.
 
 Unfortunately, most business-logic code (READ: `almost all`) does not use this technique. There are some,
@@ -27,7 +27,7 @@ connection is held for relatively long time, causing latencies to add up from wa
 There is a prominent user of batching in OLTP scheme, that is, [GraphQL](graphql.org) with its [Dataloader](https://github.com/graphql/dataloader) pattern.
 They can do it because each graphql request is basically a graph/tree request, meaning lots of data is ready to be queried at once. But it is still done on per request basis, which also means the previous 2 points still hold.
 
-This library is an attempt to make it easier to batch separate individual requests for interactive services, helping developers easily achieve high throughput plus backpressure ability to handle sudden surge.
+This library is an attempt to make it easier to combine separate individual requests, helping developers easily achieve high throughput plus backpressure ability to handle sudden surge.
 
 ## Installation
 
@@ -49,18 +49,19 @@ go get -u github.com/aarondwi/together
 
 ## Usages
 
-See the [engine](https://github.com/aarondwi/together/blob/main/engine/engine_test.go), [cluster](https://github.com/aarondwi/together/blob/main/cluster/cluster_test.go), and [combiner](https://github.com/aarondwi/together/blob/main/combiner/combiner_test.go) test files directly for the most up-to-date example.
+To use this library, see the [engine](https://github.com/aarondwi/together/blob/main/engine/engine_test.go), [cluster](https://github.com/aarondwi/together/blob/main/cluster/cluster_test.go), and [combiner](https://github.com/aarondwi/together/blob/main/combiner/combiner_test.go) test files directly for the most up-to-date example.
+For how to write typical business logic as batch, please see [here](https://github.com/aarondwi/batch-logic-example)
 
 ## Recommendations
 
-1. Start with simpler pattern, such as those with key-value access only. This typically constitute large number of requests, and very simple to batch (akin to `SELECT * FROM a_table_name WHERE some_field IN (...)`, or redis pipelines).
-2. Pool your request objects, to reduce allocations. This is another source of non-useful work.
+1. Start with simpler pattern, such as those with key-value access only. This typically constitute large number of requests, and very simple to batch (akin to `SELECT * FROM a_table_name WHERE some_field IN (...)`, or redis pipelines, memcache's multi_get).
+2. Pool your business objects, to reduce allocations. This is another source of non-useful work.
 3. Prefer pessimistic rather than optimistic concurrency control, so you can control how complex your logic should be without rollbacking everything.
 
 ## Notes
 
 1. By `batching`, it does not mean a batch processor like [spring batch](https://spring.io/projects/spring-batch), [dbt](https://www.getdbt.com/), [spark](https://spark.apache.org/), or anything like that. `Batching` here means combining/deduplicating/scatter-gather multiple request into (preferably) single request to backend, like how Facebook manages its [memcache's flow](https://www.mimuw.edu.pl/~iwanicki/courses/ds/2016/presentations/08_Pawlowska.pdf) or Quora with their [asynq](https://github.com/quora/asynq).
-2. This is designed to be used in business-level OLTP code, so it is not aiming to be *every-last-cpu-cycle* optimized (in particular, this implementation use `interface{}`, until golang support generics).
+2. This is designed to be used in high level, business OLTP code, so it is not aiming to be *every-last-cpu-cycle* optimized (in particular, this implementation use `interface{}`, which is yet another pointer + allocation, until golang support generics).
 If you have something that can be solved with this pattern, but need a more optimized one, it is recommended to make something similar yourself.
 3. The batching implementation waits on either number of message, or timeout (akin to [kafka](https://kafka.apache.org/)'s `batch.size` and `linger.ms`).
 This is by design, because we either want to batch for throughput, or for saving (if you call 3rd party APIs
@@ -73,8 +74,8 @@ If you (or a library you are using) still insist to use `panic`, please `recover
 
 ## TODO: Nice to have
 
-1. Dynamic concurrency limit, especially for number of worker goroutines. Based on upstream latency and/or work in queue, or even custom (?).
-2. Add randomized sleep option, so a lot of done works not keep contending the next part (?).
-3. Add `SubmitMany` call, that put many params with one lock call only.
-4. Add per result own error, rather than only global one.
-5. Move to generic, once golang supports it.
+1. Dynamic sizing of batch sizes, waiting time, and worker number. Based on upstream latency and/or work in queue, or even custom (?).
+2. Add `SubmitMany` call, that put many params with one lock call only.
+3. Add per result own error, rather than only global one.
+4. Move to generic, once golang supports it.
+5. Add map-based batch. Also move both map and list based to interface setup.

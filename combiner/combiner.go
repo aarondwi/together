@@ -144,9 +144,15 @@ func (c *Combiner) AllSuccessesWithContext(
 		return nil, nil
 	}
 
+	// we manage our own cancellation
+	// we defer on return, so either all completes, and just be cautious by cancelling
+	// or error returns and we cancel all pending calls
+	ctx2, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	results := make([]interface{}, len(brs))
 	ch := make(chan resolutionHelper, len(brs))
-	c.applyWithCtx(ctx, brs, ch)
+	c.applyWithCtx(ctx2, brs, ch)
 
 	for i := 0; i < len(brs); i++ {
 		resHelper := <-ch
@@ -204,9 +210,15 @@ func (c *Combiner) RaceWithContext(
 		return nil, nil
 	}
 
+	// we manage our own cancellation
+	// we defer on return, so either one completes and we cancel all pending calls
+	// or all fail, and just be cautious by cancelling
+	ctx2, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	errs := make([]error, len(brs))
 	ch := make(chan resolutionHelper, len(brs))
-	c.applyWithCtx(ctx, brs, ch)
+	c.applyWithCtx(ctx2, brs, ch)
 
 	for i := 0; i < len(brs); i++ {
 		resHelper := <-ch
