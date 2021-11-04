@@ -76,6 +76,5 @@ If you (or a library you are using) still insist to use `panic`, please `recover
 
 1. Dynamic sizing of batch sizes, waiting time, and worker number. Based on upstream latency and/or work in queue, or even custom (?).
 2. Add `SubmitMany` call, that put many params with one lock call only.
-3. Add per result own error, rather than only global one.
-4. Move to generic, once golang supports it.
-5. Add map-based batch. Also move both map and list based to interface setup.
+3. Add support for generic, once golang supports it.
+4. Add map-based batch. Useful typically for case where multiple keys could be the same.

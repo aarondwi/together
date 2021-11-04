@@ -17,7 +17,7 @@ var ErrTest = errors.New("")
 func TestAllSuccesses(t *testing.T) {
 	c := NewCombiner(wp)
 
-	res, err := c.AllSuccesses([]e.BatchResult{})
+	res, err := c.AllSuccess([]e.BatchResult{})
 	if err != nil || res != nil {
 		log.Fatalf("Both should be nil, but instead we got %v and %v", res, err)
 	}
@@ -42,7 +42,7 @@ func TestAllSuccesses(t *testing.T) {
 	res3 := e1.Submit(3)
 	res4 := e1.Submit(4)
 
-	resArr, err := c.AllSuccesses([]e.BatchResult{res1, res2, res3, res4})
+	resArr, err := c.AllSuccess([]e.BatchResult{res1, res2, res3, res4})
 	if err != nil {
 		log.Fatalf("It should not error, cause all ok, but we got %v", err)
 	}
@@ -66,7 +66,7 @@ func TestAllSuccesses(t *testing.T) {
 	res5 := e1.Submit(3)
 	res6 := e2.Submit(4)
 
-	_, err = c.AllSuccesses([]e.BatchResult{res5, res6})
+	_, err = c.AllSuccess([]e.BatchResult{res5, res6})
 	if err == nil || err != ErrTest {
 		log.Fatalf("It should return error ErrTest, but instead we got %v", err)
 	}
@@ -75,7 +75,7 @@ func TestAllSuccesses(t *testing.T) {
 func TestAllSuccessesNilWorkerPool(t *testing.T) {
 	c := NewCombiner(nil)
 
-	res, err := c.AllSuccesses([]e.BatchResult{})
+	res, err := c.AllSuccess([]e.BatchResult{})
 	if err != nil || res != nil {
 		log.Fatalf("Both should be nil, but instead we got %v and %v", res, err)
 	}
@@ -100,7 +100,7 @@ func TestAllSuccessesNilWorkerPool(t *testing.T) {
 	res3 := e1.Submit(3)
 	res4 := e1.Submit(4)
 
-	resArr, err := c.AllSuccesses([]e.BatchResult{res1, res2, res3, res4})
+	resArr, err := c.AllSuccess([]e.BatchResult{res1, res2, res3, res4})
 	if err != nil {
 		log.Fatalf("It should not error, cause all ok, but we got %v", err)
 	}
@@ -124,7 +124,7 @@ func TestAllSuccessesNilWorkerPool(t *testing.T) {
 	res5 := e1.Submit(3)
 	res6 := e2.Submit(4)
 
-	_, err = c.AllSuccesses([]e.BatchResult{res5, res6})
+	_, err = c.AllSuccess([]e.BatchResult{res5, res6})
 	if err == nil || err != ErrTest {
 		log.Fatalf("It should return error ErrTest, but instead we got %v", err)
 	}
@@ -133,14 +133,14 @@ func TestAllSuccessesNilWorkerPool(t *testing.T) {
 func TestAllSuccessesWithCtx(t *testing.T) {
 	c := NewCombiner(wp)
 
-	res, err := c.AllSuccessesWithContext(context.Background(), []e.BatchResult{})
+	res, err := c.AllSuccessWithContext(context.Background(), []e.BatchResult{})
 	if err != nil || res != nil {
 		log.Fatalf("Both should be nil, but instead we got %v and %v", res, err)
 	}
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
-	_, err = c.AllSuccessesWithContext(ctx, []e.BatchResult{})
+	_, err = c.AllSuccessWithContext(ctx, []e.BatchResult{})
 	if err == nil {
 		log.Fatal("Should return Err Cancelled, but instead we got nil")
 	}
@@ -164,7 +164,7 @@ func TestAllSuccessesWithCtx(t *testing.T) {
 	res3 := e1.Submit(3)
 	res4 := e1.Submit(4)
 
-	resArr, err := c.AllSuccessesWithContext(
+	resArr, err := c.AllSuccessWithContext(
 		context.Background(), []e.BatchResult{res1, res2, res3, res4})
 	if err != nil {
 		log.Fatalf("It should not error, cause all ok, but we got %v", err)
@@ -189,7 +189,7 @@ func TestAllSuccessesWithCtx(t *testing.T) {
 	res5 := e1.Submit(3)
 	res6 := e2.Submit(4)
 
-	_, err = c.AllSuccessesWithContext(context.Background(), []e.BatchResult{res5, res6})
+	_, err = c.AllSuccessWithContext(context.Background(), []e.BatchResult{res5, res6})
 	if err == nil || err != ErrTest {
 		log.Fatalf("It should return error ErrTest, but instead we got %v", err)
 	}
@@ -198,14 +198,14 @@ func TestAllSuccessesWithCtx(t *testing.T) {
 func TestAllSuccessesWithCtxNilWorkerPool(t *testing.T) {
 	c := NewCombiner(nil)
 
-	res, err := c.AllSuccessesWithContext(context.Background(), []e.BatchResult{})
+	res, err := c.AllSuccessWithContext(context.Background(), []e.BatchResult{})
 	if err != nil || res != nil {
 		log.Fatalf("Both should be nil, but instead we got %v and %v", res, err)
 	}
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
-	_, err = c.AllSuccessesWithContext(ctx, []e.BatchResult{})
+	_, err = c.AllSuccessWithContext(ctx, []e.BatchResult{})
 	if err == nil {
 		log.Fatal("Should return Err Cancelled, but instead we got nil")
 	}
@@ -229,7 +229,7 @@ func TestAllSuccessesWithCtxNilWorkerPool(t *testing.T) {
 	res3 := e1.Submit(3)
 	res4 := e1.Submit(4)
 
-	resArr, err := c.AllSuccessesWithContext(
+	resArr, err := c.AllSuccessWithContext(
 		context.Background(), []e.BatchResult{res1, res2, res3, res4})
 	if err != nil {
 		log.Fatalf("It should not error, cause all ok, but we got %v", err)
@@ -254,7 +254,7 @@ func TestAllSuccessesWithCtxNilWorkerPool(t *testing.T) {
 	res5 := e1.Submit(3)
 	res6 := e2.Submit(4)
 
-	_, err = c.AllSuccessesWithContext(context.Background(), []e.BatchResult{res5, res6})
+	_, err = c.AllSuccessWithContext(context.Background(), []e.BatchResult{res5, res6})
 	if err == nil || err != ErrTest {
 		log.Fatalf("It should return error ErrTest, but instead we got %v", err)
 	}

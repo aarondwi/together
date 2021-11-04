@@ -95,3 +95,27 @@ func TestBatchGetResultWithCtx(t *testing.T) {
 		log.Fatalf("We should receive 2, but instead we got %d", res.(int))
 	}
 }
+
+func TestBatchResultIsError(t *testing.T) {
+	errX := errors.New("error X is for test only")
+
+	b := &Batch{
+		ID:      1,
+		args:    map[uint64]interface{}{10: errX},
+		argSize: 10,
+		results: map[uint64]interface{}{10: errX},
+		wp:      nil,
+	}
+
+	br1 := BatchResult{id: 10, batch: b}
+	_, err := br1.GetResult()
+	if err == nil || err != errX {
+		log.Fatalf("Should return `errX`, but we got %v", err)
+	}
+
+	br2 := BatchResult{id: 10, batch: b}
+	_, err = br2.GetResultWithContext(context.Background())
+	if err == nil || err != errX {
+		log.Fatalf("Should return `errX`, but we got %v", err)
+	}
+}

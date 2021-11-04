@@ -7,6 +7,11 @@ import (
 	WP "github.com/aarondwi/together/workerpool"
 )
 
+// resolutionHelper is used as an intermediary object passed between goroutines
+//
+// This object is not pool-ed (for now), as for `AllSuccess`, `Race`, and their context idiom
+// has fast path, which means not all instances of this object can be return back to pool,
+// without moving it to yet another separate goroutine
 type resolutionHelper struct {
 	index  int
 	result interface{}
@@ -25,8 +30,7 @@ type resolutionHelper struct {
 //
 // On every call, buffered channel is created, to prevent goroutine leak.
 //
-// Notes do to the nature of the problem,
-// this implementation has quite a few allocations on hot path.
+// Notes do to the nature of the problem, this implementation do a few allocations on hot path.
 // Use this implementation sparingly.
 type Combiner struct {
 	wp *WP.WorkerPool
@@ -103,11 +107,11 @@ func (c *Combiner) applyWithCtx(
 	}
 }
 
-// AllSuccesses waits for all BatchResult to be returned, or one error be returned.
+// AllSuccess waits for all BatchResult to be returned, or one error be returned.
 //
 // If all succeed, this will return array of response in the same order as params, with nil error.
 // Else, it returns the first error only.
-func (c *Combiner) AllSuccesses(brs []e.BatchResult) ([]interface{}, error) {
+func (c *Combiner) AllSuccess(brs []e.BatchResult) ([]interface{}, error) {
 	if len(brs) == 0 {
 		return nil, nil
 	}
@@ -127,11 +131,11 @@ func (c *Combiner) AllSuccesses(brs []e.BatchResult) ([]interface{}, error) {
 	return results, nil
 }
 
-// AllSuccessesWithContext is the same as `All` call, but with context idiom.
+// AllSuccessWithContext is the same as `All` call, but with context idiom.
 //
 // Note unless you need the context idiom, it is preferable
 // to use `All` call instead, as it has less allocations (so it is faster)
-func (c *Combiner) AllSuccessesWithContext(
+func (c *Combiner) AllSuccessWithContext(
 	ctx context.Context, brs []e.BatchResult) ([]interface{}, error) {
 
 	// fast path

@@ -7,10 +7,14 @@ import (
 	WP "github.com/aarondwi/together/workerpool"
 )
 
-// Batch is our wrapper, promise implementation.
+// Batch wraps multiple result, and expose API to get the result from it
 //
-// This implementation is *NOT* goroutine-safe,
-// but should be okay as it is always created without pointer (on stack)
+// This object is *NOT* goroutine-safe,
+// but internally, always used only inside a mutex or by one background worker only
+//
+// While there are `GetResult()` and `GetResultWithContext`
+// Batch object itself has no context variant
+// as we can't know which context it should be based on
 type Batch struct {
 	ID      uint64
 	args    map[uint64]interface{}
@@ -33,8 +37,7 @@ var EmptyBatchResult = BatchResult{}
 // Once taken to work on, nothing should be put anymore
 func NewBatch(id uint64, wp *WP.WorkerPool) *Batch {
 	b := &Batch{
-		ID: id,
-		// how to pool map?
+		ID:   id,
 		args: make(map[uint64]interface{}),
 		wp:   wp,
 	}
@@ -42,7 +45,7 @@ func NewBatch(id uint64, wp *WP.WorkerPool) *Batch {
 	return b
 }
 
-// Put into the Batch.args
+// Put into Batch.args
 func (b *Batch) Put(
 	id uint64, arg interface{}) BatchResult {
 	b.args[id] = arg
@@ -67,12 +70,15 @@ func (br *BatchResult) GetResult() (interface{}, error) {
 	if !ok {
 		return nil, ErrResultNotFound
 	}
+	if err, ok := res.(error); ok {
+		return nil, err
+	}
 	return res, nil
 }
 
 // GetResultWithContext waits until either the batch or ctx is done,
 // then match the result for each caller.
-// You need to have common.WorkerPool object for this function to work.
+// You need to have WorkerPool object for this function to work.
 //
 // Note that unless you need to use the context idiom, it is recommended
 // to use `GetResult()` call instead, as it has much, much less allocation (only interface{} typecasting).
@@ -83,7 +89,6 @@ func (br *BatchResult) GetResult() (interface{}, error) {
 // if you are using multiple `GetResultWithContext` in single function,
 // be sure to assign it to different local variable.
 // See https://stackoverflow.com/questions/25919213/why-does-go-handle-closures-differently-in-goroutines
-// for details
 func (br *BatchResult) GetResultWithContext(
 	ctx context.Context) (interface{}, error) {
 	// fast path, ctx already done
