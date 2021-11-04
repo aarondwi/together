@@ -37,9 +37,9 @@ go get -u github.com/aarondwi/together
 
 ## Features
 
-1. Small and clear codebase (<1000 LoC), excluding tests.
+1. Small and clear codebase (~1000 LoC), excluding tests.
 2. General enough to be used for any batching case, and can easily be abstracted higher.
-3. Fast. On 2 years old laptop with Intel Core-i7 8550u, with batch worker simulating network call by sleeping for 2ms, `Cluster` reaching ~2 million invocation/s.
+3. Fast. On my test laptop, with worker simulating relatively network call by sleeping for 2ms, `Cluster` reaching ~2 million invocation/s.
 4. Easy promise-like API (just use `Submit` or equivalent call), and all params will be available to batch worker. You just need to return the call with same key as the given parameters.
 5. Circumvent single lock contention using `Cluster` implementation.
 6. Optional background worker, so no goroutine creations on hot path (using tunable `WorkerPool`).
@@ -60,7 +60,7 @@ For how to write typical business logic as batch, please see [here](https://gith
 
 ## Notes
 
-1. By `batching`, it does not mean a batch processor like [spring batch](https://spring.io/projects/spring-batch), [dbt](https://www.getdbt.com/), [spark](https://spark.apache.org/), or anything like that. `Batching` here means combining/deduplicating/scatter-gather multiple request into (preferably) single request to backend, like how Facebook manages its [memcache's flow](https://www.mimuw.edu.pl/~iwanicki/courses/ds/2016/presentations/08_Pawlowska.pdf) or Quora with their [asynq](https://github.com/quora/asynq).
+1. This is **NOT** a batch processor like [spring batch](https://spring.io/projects/spring-batch), [dbt](https://www.getdbt.com/), [spark](https://spark.apache.org/), or anything like that. `This library does combining/deduplicating/scatter-gather multiple request into (preferably) single request to backend, like how Facebook manages its [memcache's flow](https://www.mimuw.edu.pl/~iwanicki/courses/ds/2016/presentations/08_Pawlowska.pdf) or Quora with their [asynq](https://github.com/quora/asynq).
 2. This is designed to be used in high level, business OLTP code, so it is not aiming to be *every-last-cpu-cycle* optimized (in particular, this implementation use `interface{}`, which is yet another pointer + allocation, until golang support generics).
 If you have something that can be solved with this pattern, but need a more optimized one, it is recommended to make something similar yourself.
 3. The batching implementation waits on either number of message, or timeout (akin to [kafka](https://kafka.apache.org/)'s `batch.size` and `linger.ms`).

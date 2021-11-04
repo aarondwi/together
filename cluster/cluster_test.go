@@ -5,12 +5,12 @@ import (
 	"testing"
 	"time"
 
-	com "github.com/aarondwi/together/common"
 	e "github.com/aarondwi/together/engine"
+	WP "github.com/aarondwi/together/workerpool"
 )
 
 func TestClusterValidation(t *testing.T) {
-	var wp, _ = com.NewWorkerPool(4, 10)
+	var wp, _ = WP.NewWorkerPool(4, 10, false)
 	_, err := NewCluster(
 		1, nil,
 		e.EngineConfig{
@@ -18,7 +18,7 @@ func TestClusterValidation(t *testing.T) {
 			ArgSizeLimit: 10,
 			WaitDuration: time.Duration(time.Second)},
 		nil, wp)
-	if err == nil || err != com.ErrPartitionNumberTooLow {
+	if err == nil || err != ErrPartitionNumberTooLow {
 		log.Fatal("Should return ErrPartitionNumberTooLow cause only given 1, but it is not")
 	}
 
@@ -50,7 +50,7 @@ func TestClusterSubmitNilPartitionerFn(t *testing.T) {
 	}
 
 	_, err = c.Submit(1)
-	if err == nil || err != com.ErrNilPartitionerFunc {
+	if err == nil || err != ErrNilPartitionerFunc {
 		log.Fatal("Should error because nil partitioner func, but it is not")
 	}
 }
@@ -73,12 +73,12 @@ func TestClusterSubmitOutsideRange(t *testing.T) {
 	}
 
 	_, err = c.Submit(1)
-	if err == nil || err != com.ErrPartitionNumOutOfRange {
+	if err == nil || err != ErrPartitionNumOutOfRange {
 		log.Fatal("Should error because out of range, but it is not")
 	}
 
 	_, err = c.SubmitToPartition(2, 1)
-	if err == nil || err != com.ErrPartitionNumOutOfRange {
+	if err == nil || err != ErrPartitionNumOutOfRange {
 		log.Fatal("Should error because out of range, but it is not")
 	}
 }

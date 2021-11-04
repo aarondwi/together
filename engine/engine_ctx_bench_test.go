@@ -6,14 +6,15 @@ import (
 	"math/rand"
 	"testing"
 
-	c "github.com/aarondwi/together/common"
+	tp "github.com/aarondwi/together/testparam"
+	WP "github.com/aarondwi/together/workerpool"
 )
 
 func BenchmarkEngineWithCtx_Parallel256(b *testing.B) {
-	var wp_ecbt = c.GetDefaultWorkerPool()
+	var wp_ecbt = WP.GetDefaultWorkerPool()
 	e, err := NewEngine(
-		EngineConfig{c.NUM_OF_WORKER, c.NUM_OF_ARGS_TO_WAIT, c.SLEEP_DURATION},
-		c.BatchFunc, wp_ecbt)
+		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
+		tp.BatchFunc, wp_ecbt)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,10 +36,10 @@ func BenchmarkEngineWithCtx_Parallel256(b *testing.B) {
 }
 
 func BenchmarkEngineWithCtx_Parallel1024(b *testing.B) {
-	var wp_ecbt = c.GetDefaultWorkerPool()
+	var wp_ecbt = WP.GetDefaultWorkerPool()
 	e, err := NewEngine(
-		EngineConfig{c.NUM_OF_WORKER, c.NUM_OF_ARGS_TO_WAIT, c.SLEEP_DURATION},
-		c.BatchFunc, wp_ecbt)
+		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
+		tp.BatchFunc, wp_ecbt)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,10 +61,10 @@ func BenchmarkEngineWithCtx_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkEngineWithCtx_Parallel4096(b *testing.B) {
-	var wp_ecbt = c.GetDefaultWorkerPool()
+	var wp_ecbt = WP.GetDefaultWorkerPool()
 	e, err := NewEngine(
-		EngineConfig{c.NUM_OF_WORKER, c.NUM_OF_ARGS_TO_WAIT, c.SLEEP_DURATION},
-		c.BatchFunc, wp_ecbt)
+		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
+		tp.BatchFunc, wp_ecbt)
 	if err != nil {
 		log.Fatal(err)
 	}

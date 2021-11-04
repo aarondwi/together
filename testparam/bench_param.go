@@ -1,4 +1,4 @@
-package common
+package testparam
 
 import "time"
 
@@ -18,9 +18,4 @@ func BatchFunc(m map[uint64]interface{}) (map[uint64]interface{}, error) {
 	// simulate a fairly fast network call
 	time.Sleep(2 * time.Millisecond)
 	return m, nil
-}
-
-func GetDefaultWorkerPool() *WorkerPool {
-	var WP, _ = NewWorkerPool(8, 512)
-	return WP
 }

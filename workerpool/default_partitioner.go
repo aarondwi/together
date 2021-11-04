@@ -1,4 +1,4 @@
-package common
+package workerpool
 
 import (
 	"math/rand"
@@ -27,4 +27,9 @@ func GetDefaultPartitioner(x int) func(arg interface{}) int {
 		randPool.Put(r)
 		return result
 	}
+}
+
+func GetDefaultWorkerPool() *WorkerPool {
+	var WP, _ = NewWorkerPool(8, 512, false)
+	return WP
 }

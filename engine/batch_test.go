@@ -6,7 +6,7 @@ import (
 	"log"
 	"testing"
 
-	com "github.com/aarondwi/together/common"
+	WP "github.com/aarondwi/together/workerpool"
 )
 
 /*
@@ -51,7 +51,7 @@ func TestBatchGetResult(t *testing.T) {
 }
 
 func TestBatchGetResultWithCtx(t *testing.T) {
-	var wp, _ = com.NewWorkerPool(2, 1)
+	var wp, _ = WP.NewWorkerPool(2, 1, false)
 	b := &Batch{
 		ID:      1,
 		args:    map[uint64]interface{}{10: 2},

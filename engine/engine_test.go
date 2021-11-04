@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	com "github.com/aarondwi/together/common"
+	WP "github.com/aarondwi/together/workerpool"
 )
 
 func TestEngine(t *testing.T) {
-	var wp, _ = com.NewWorkerPool(4, 10)
+	var wp, _ = WP.NewWorkerPool(4, 10, false)
 	valShouldFail := 13
 	globalCount := 0
 	e, err := NewEngine(
@@ -66,7 +66,7 @@ func TestEngine(t *testing.T) {
 }
 
 func TestEngineReturnsError(t *testing.T) {
-	var wp, _ = com.NewWorkerPool(4, 10)
+	var wp, _ = WP.NewWorkerPool(4, 10, false)
 	ErrTest := errors.New("")
 	e, err := NewEngine(
 		EngineConfig{1, 10, time.Duration(5 * time.Millisecond)},
@@ -97,11 +97,11 @@ func TestEngineReturnsError(t *testing.T) {
 }
 
 func TestEngineValidation(t *testing.T) {
-	var wp, _ = com.NewWorkerPool(4, 10)
+	var wp, _ = WP.NewWorkerPool(4, 10, false)
 	_, err := NewEngine(
 		EngineConfig{-1, 10, time.Duration(time.Second)},
 		nil, wp)
-	if err == nil || err != com.ErrNumOfWorkerLessThanEqualZero {
+	if err == nil || err != WP.ErrNumberOfWorkerLessThanEqualZero {
 		log.Fatal("Should fail cause numOfWorker <= 0, but it is not")
 	}
 

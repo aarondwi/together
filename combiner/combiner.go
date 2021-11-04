@@ -3,8 +3,8 @@ package combiner
 import (
 	"context"
 
-	com "github.com/aarondwi/together/common"
 	e "github.com/aarondwi/together/engine"
+	WP "github.com/aarondwi/together/workerpool"
 )
 
 type resolutionHelper struct {
@@ -29,11 +29,11 @@ type resolutionHelper struct {
 // this implementation has quite a few allocations on hot path.
 // Use this implementation sparingly.
 type Combiner struct {
-	wp *com.WorkerPool
+	wp *WP.WorkerPool
 }
 
 // NewCombiner creates our combiner, given the WorkerPool.
-func NewCombiner(wp *com.WorkerPool) *Combiner {
+func NewCombiner(wp *WP.WorkerPool) *Combiner {
 	return &Combiner{wp: wp}
 }
 

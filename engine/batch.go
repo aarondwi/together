@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	com "github.com/aarondwi/together/common"
+	WP "github.com/aarondwi/together/workerpool"
 )
 
 // Batch is our wrapper, promise implementation.
@@ -18,7 +18,7 @@ type Batch struct {
 	wg      sync.WaitGroup
 	results map[uint64]interface{}
 	err     error
-	wp      *com.WorkerPool
+	wp      *WP.WorkerPool
 }
 
 type BatchResult struct {
@@ -31,7 +31,7 @@ var EmptyBatchResult = BatchResult{}
 // NewBatch creates a new batch
 //
 // Once taken to work on, nothing should be put anymore
-func NewBatch(id uint64, wp *com.WorkerPool) *Batch {
+func NewBatch(id uint64, wp *WP.WorkerPool) *Batch {
 	b := &Batch{
 		ID: id,
 		// how to pool map?

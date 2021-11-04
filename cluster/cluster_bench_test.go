@@ -5,19 +5,20 @@ import (
 	"math/rand"
 	"testing"
 
-	c "github.com/aarondwi/together/common"
 	e "github.com/aarondwi/together/engine"
+	tp "github.com/aarondwi/together/testparam"
+	WP "github.com/aarondwi/together/workerpool"
 )
 
 func BenchmarkCluster_Partition4_Parallel256(b *testing.B) {
-	var wp_cbt = c.GetDefaultWorkerPool()
+	var wp_cbt = WP.GetDefaultWorkerPool()
 	c, err := NewCluster(
-		c.PARTITION_4, c.GetDefaultPartitioner(c.PARTITION_4),
+		tp.PARTITION_4, WP.GetDefaultPartitioner(tp.PARTITION_4),
 		e.EngineConfig{
-			NumOfWorker:  c.NUM_OF_WORKER / c.PARTITION_4,
-			ArgSizeLimit: c.NUM_OF_ARGS_TO_WAIT,
-			WaitDuration: c.SLEEP_DURATION},
-		c.BatchFunc,
+			NumOfWorker:  tp.NUM_OF_WORKER / tp.PARTITION_4,
+			ArgSizeLimit: tp.NUM_OF_ARGS_TO_WAIT,
+			WaitDuration: tp.SLEEP_DURATION},
+		tp.BatchFunc,
 		wp_cbt)
 	if err != nil {
 		log.Fatal(err)
@@ -43,14 +44,14 @@ func BenchmarkCluster_Partition4_Parallel256(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition4_Parallel1024(b *testing.B) {
-	var wp_cbt = c.GetDefaultWorkerPool()
+	var wp_cbt = WP.GetDefaultWorkerPool()
 	c, err := NewCluster(
-		c.PARTITION_4, c.GetDefaultPartitioner(c.PARTITION_4),
+		tp.PARTITION_4, WP.GetDefaultPartitioner(tp.PARTITION_4),
 		e.EngineConfig{
-			NumOfWorker:  c.NUM_OF_WORKER / c.PARTITION_4,
-			ArgSizeLimit: c.NUM_OF_ARGS_TO_WAIT,
-			WaitDuration: c.SLEEP_DURATION},
-		c.BatchFunc,
+			NumOfWorker:  tp.NUM_OF_WORKER / tp.PARTITION_4,
+			ArgSizeLimit: tp.NUM_OF_ARGS_TO_WAIT,
+			WaitDuration: tp.SLEEP_DURATION},
+		tp.BatchFunc,
 		wp_cbt,
 	)
 	if err != nil {
@@ -77,14 +78,14 @@ func BenchmarkCluster_Partition4_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition4_Parallel4096(b *testing.B) {
-	var wp_cbt = c.GetDefaultWorkerPool()
+	var wp_cbt = WP.GetDefaultWorkerPool()
 	c, err := NewCluster(
-		c.PARTITION_4, c.GetDefaultPartitioner(c.PARTITION_4),
+		tp.PARTITION_4, WP.GetDefaultPartitioner(tp.PARTITION_4),
 		e.EngineConfig{
-			NumOfWorker:  c.NUM_OF_WORKER / c.PARTITION_4,
-			ArgSizeLimit: c.NUM_OF_ARGS_TO_WAIT,
-			WaitDuration: c.SLEEP_DURATION},
-		c.BatchFunc,
+			NumOfWorker:  tp.NUM_OF_WORKER / tp.PARTITION_4,
+			ArgSizeLimit: tp.NUM_OF_ARGS_TO_WAIT,
+			WaitDuration: tp.SLEEP_DURATION},
+		tp.BatchFunc,
 		wp_cbt,
 	)
 	if err != nil {
@@ -111,14 +112,14 @@ func BenchmarkCluster_Partition4_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition8_Parallel256(b *testing.B) {
-	var wp_cbt = c.GetDefaultWorkerPool()
+	var wp_cbt = WP.GetDefaultWorkerPool()
 	c, err := NewCluster(
-		c.PARTITION_8, c.GetDefaultPartitioner(c.PARTITION_8),
+		tp.PARTITION_8, WP.GetDefaultPartitioner(tp.PARTITION_8),
 		e.EngineConfig{
-			NumOfWorker:  c.NUM_OF_WORKER / c.PARTITION_8,
-			ArgSizeLimit: c.NUM_OF_ARGS_TO_WAIT,
-			WaitDuration: c.SLEEP_DURATION},
-		c.BatchFunc,
+			NumOfWorker:  tp.NUM_OF_WORKER / tp.PARTITION_8,
+			ArgSizeLimit: tp.NUM_OF_ARGS_TO_WAIT,
+			WaitDuration: tp.SLEEP_DURATION},
+		tp.BatchFunc,
 		wp_cbt,
 	)
 	if err != nil {
@@ -145,14 +146,14 @@ func BenchmarkCluster_Partition8_Parallel256(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition8_Parallel1024(b *testing.B) {
-	var wp_cbt = c.GetDefaultWorkerPool()
+	var wp_cbt = WP.GetDefaultWorkerPool()
 	c, err := NewCluster(
-		c.PARTITION_8, c.GetDefaultPartitioner(c.PARTITION_8),
+		tp.PARTITION_8, WP.GetDefaultPartitioner(tp.PARTITION_8),
 		e.EngineConfig{
-			NumOfWorker:  c.NUM_OF_WORKER / c.PARTITION_8,
-			ArgSizeLimit: c.NUM_OF_ARGS_TO_WAIT,
-			WaitDuration: c.SLEEP_DURATION},
-		c.BatchFunc,
+			NumOfWorker:  tp.NUM_OF_WORKER / tp.PARTITION_8,
+			ArgSizeLimit: tp.NUM_OF_ARGS_TO_WAIT,
+			WaitDuration: tp.SLEEP_DURATION},
+		tp.BatchFunc,
 		wp_cbt,
 	)
 	if err != nil {
@@ -179,14 +180,14 @@ func BenchmarkCluster_Partition8_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition8_Parallel4096(b *testing.B) {
-	var wp_cbt = c.GetDefaultWorkerPool()
+	var wp_cbt = WP.GetDefaultWorkerPool()
 	c, err := NewCluster(
-		c.PARTITION_8, c.GetDefaultPartitioner(c.PARTITION_8),
+		tp.PARTITION_8, WP.GetDefaultPartitioner(tp.PARTITION_8),
 		e.EngineConfig{
-			NumOfWorker:  c.NUM_OF_WORKER / c.PARTITION_8,
-			ArgSizeLimit: c.NUM_OF_ARGS_TO_WAIT,
-			WaitDuration: c.SLEEP_DURATION},
-		c.BatchFunc,
+			NumOfWorker:  tp.NUM_OF_WORKER / tp.PARTITION_8,
+			ArgSizeLimit: tp.NUM_OF_ARGS_TO_WAIT,
+			WaitDuration: tp.SLEEP_DURATION},
+		tp.BatchFunc,
 		wp_cbt,
 	)
 	if err != nil {
@@ -213,14 +214,14 @@ func BenchmarkCluster_Partition8_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition16_Parallel256(b *testing.B) {
-	var wp_cbt = c.GetDefaultWorkerPool()
+	var wp_cbt = WP.GetDefaultWorkerPool()
 	c, err := NewCluster(
-		c.PARTITION_16, c.GetDefaultPartitioner(c.PARTITION_16),
+		tp.PARTITION_16, WP.GetDefaultPartitioner(tp.PARTITION_16),
 		e.EngineConfig{
-			NumOfWorker:  c.NUM_OF_WORKER / c.PARTITION_16,
-			ArgSizeLimit: c.NUM_OF_ARGS_TO_WAIT,
-			WaitDuration: c.SLEEP_DURATION},
-		c.BatchFunc,
+			NumOfWorker:  tp.NUM_OF_WORKER / tp.PARTITION_16,
+			ArgSizeLimit: tp.NUM_OF_ARGS_TO_WAIT,
+			WaitDuration: tp.SLEEP_DURATION},
+		tp.BatchFunc,
 		wp_cbt,
 	)
 	if err != nil {
@@ -247,14 +248,14 @@ func BenchmarkCluster_Partition16_Parallel256(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition16_Parallel1024(b *testing.B) {
-	var wp_cbt = c.GetDefaultWorkerPool()
+	var wp_cbt = WP.GetDefaultWorkerPool()
 	c, err := NewCluster(
-		c.PARTITION_16, c.GetDefaultPartitioner(c.PARTITION_16),
+		tp.PARTITION_16, WP.GetDefaultPartitioner(tp.PARTITION_16),
 		e.EngineConfig{
-			NumOfWorker:  c.NUM_OF_WORKER / c.PARTITION_16,
-			ArgSizeLimit: c.NUM_OF_ARGS_TO_WAIT,
-			WaitDuration: c.SLEEP_DURATION},
-		c.BatchFunc,
+			NumOfWorker:  tp.NUM_OF_WORKER / tp.PARTITION_16,
+			ArgSizeLimit: tp.NUM_OF_ARGS_TO_WAIT,
+			WaitDuration: tp.SLEEP_DURATION},
+		tp.BatchFunc,
 		wp_cbt,
 	)
 	if err != nil {
@@ -281,14 +282,14 @@ func BenchmarkCluster_Partition16_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition16_Parallel4096(b *testing.B) {
-	var wp_cbt = c.GetDefaultWorkerPool()
+	var wp_cbt = WP.GetDefaultWorkerPool()
 	c, err := NewCluster(
-		c.PARTITION_16, c.GetDefaultPartitioner(c.PARTITION_16),
+		tp.PARTITION_16, WP.GetDefaultPartitioner(tp.PARTITION_16),
 		e.EngineConfig{
-			NumOfWorker:  c.NUM_OF_WORKER / c.PARTITION_16,
-			ArgSizeLimit: c.NUM_OF_ARGS_TO_WAIT,
-			WaitDuration: c.SLEEP_DURATION},
-		c.BatchFunc,
+			NumOfWorker:  tp.NUM_OF_WORKER / tp.PARTITION_16,
+			ArgSizeLimit: tp.NUM_OF_ARGS_TO_WAIT,
+			WaitDuration: tp.SLEEP_DURATION},
+		tp.BatchFunc,
 		wp_cbt,
 	)
 	if err != nil {

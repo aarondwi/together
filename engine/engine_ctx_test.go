@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	com "github.com/aarondwi/together/common"
+	WP "github.com/aarondwi/together/workerpool"
 )
 
 func TestEngineWithCtx(t *testing.T) {
-	var wp, _ = com.NewWorkerPool(4, 10)
+	var wp, _ = WP.NewWorkerPool(4, 10, false)
 	valShouldFail := 18
 	globalCount := 0
 	e, err := NewEngine(
@@ -76,7 +76,7 @@ func TestEngineCtxReturnsError(t *testing.T) {
 	 * See https://stackoverflow.com/questions/25919213/why-does-go-handle-closures-differently-in-goroutines
 	 * for details
 	 */
-	var wp, _ = com.NewWorkerPool(4, 10)
+	var wp, _ = WP.NewWorkerPool(4, 10, false)
 	ErrTest := errors.New("")
 	e, err := NewEngine(
 		EngineConfig{1, 10, time.Duration(1 * time.Millisecond)},

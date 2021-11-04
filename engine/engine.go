@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	com "github.com/aarondwi/together/common"
+	WP "github.com/aarondwi/together/workerpool"
 )
 
 // ErrArgSizeLimitLessThanEqualOne is returned
@@ -42,7 +42,7 @@ type Engine struct {
 	currentBatch *Batch
 	argSizeLimit int
 	waitDuration time.Duration
-	wp           *com.WorkerPool
+	wp           *WP.WorkerPool
 }
 
 // EngineConfig is the config object for our engine
@@ -58,9 +58,9 @@ type EngineConfig struct {
 func NewEngine(
 	ec EngineConfig,
 	fn WorkerFn,
-	wp *com.WorkerPool) (*Engine, error) {
+	wp *WP.WorkerPool) (*Engine, error) {
 	if ec.NumOfWorker <= 0 {
-		return nil, com.ErrNumOfWorkerLessThanEqualZero
+		return nil, WP.ErrNumberOfWorkerLessThanEqualZero
 	}
 	if ec.ArgSizeLimit <= 1 {
 		return nil, ErrArgSizeLimitLessThanEqualOne

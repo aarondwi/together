@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	com "github.com/aarondwi/together/common"
 	e "github.com/aarondwi/together/engine"
+	WP "github.com/aarondwi/together/workerpool"
 )
 
-var wp, _ = com.NewWorkerPool(4, 10)
+var wp, _ = WP.NewWorkerPool(4, 10, false)
 var ErrTest = errors.New("")
 
 func TestAllSuccesses(t *testing.T) {
