@@ -3,7 +3,6 @@ package engine
 import (
 	"context"
 	"errors"
-	"log"
 	"sync"
 	"testing"
 	"time"
@@ -33,7 +32,7 @@ func TestEngineWithCtx(t *testing.T) {
 			return res, nil
 		}, wp)
 	if err != nil {
-		log.Fatalf("It should not error, cause all correct, but got %v", err)
+		t.Fatalf("It should not error, cause all correct, but got %v", err)
 	}
 	var wg sync.WaitGroup
 	wg.Add(24)
@@ -44,16 +43,16 @@ func TestEngineWithCtx(t *testing.T) {
 				context.Background())
 			if j == valShouldFail {
 				if err == nil || err != ErrResultNotFound {
-					log.Fatalf("Submit with arg %d should fail, but we got %v, with error %v", valShouldFail, res, err)
+					t.Fatalf("Submit with arg %d should fail, but we got %v, with error %v", valShouldFail, res, err)
 				}
 			} else {
 				if err != nil {
-					log.Fatalf(
+					t.Fatalf(
 						"Call with arg %d should not fail, but we got %v",
 						j, err)
 				}
 				if res.(int) != j*2 {
-					log.Fatalf(
+					t.Fatalf(
 						"Call with arg %d should return %d, but we got %d",
 						j, j*2, res.(int))
 				}
@@ -63,7 +62,7 @@ func TestEngineWithCtx(t *testing.T) {
 	}
 	wg.Wait()
 	if globalCount != 3 {
-		log.Fatalf("batch should be called 3 times, but we got %d", globalCount)
+		t.Fatalf("batch should be called 3 times, but we got %d", globalCount)
 	}
 }
 
@@ -87,7 +86,7 @@ func TestEngineCtxReturnsError(t *testing.T) {
 			return nil, ErrTest
 		}, wp)
 	if err != nil {
-		log.Fatalf("It should not error, cause all correct, but got %v", err)
+		t.Fatalf("It should not error, cause all correct, but got %v", err)
 	}
 
 	// we can assign to br, but for consistency later on,
@@ -98,7 +97,7 @@ func TestEngineCtxReturnsError(t *testing.T) {
 	_, err = br1.GetResultWithContext(ctx)
 	// should not be ErrTest, because ctx is cancelled first
 	if err == nil || err == ErrTest {
-		log.Fatal("Should not receive ErrTest, cause ctx already cancelled, but it is")
+		t.Fatal("Should not receive ErrTest, cause ctx already cancelled, but it is")
 	}
 
 	// can't assign to br, cause go will consider it to point to same object, causing race condition
@@ -112,13 +111,13 @@ func TestEngineCtxReturnsError(t *testing.T) {
 	_, err = br2.GetResultWithContext(ctx)
 	// should not be ErrTest, because ctx is cancelled first
 	if err == nil || err == ErrTest {
-		log.Fatal("Should not receive ErrTest, cause ctx got cancelled first, but it is")
+		t.Fatal("Should not receive ErrTest, cause ctx got cancelled first, but it is")
 	}
 
 	// same as before, now at 3
 	br3 := e.Submit(10)
 	_, err = br3.GetResultWithContext(context.Background())
 	if err == nil || err != ErrTest {
-		log.Fatalf("Should receive ErrTest, but instead we got %v", err)
+		t.Fatalf("Should receive ErrTest, but instead we got %v", err)
 	}
 }

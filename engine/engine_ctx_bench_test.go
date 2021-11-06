@@ -2,7 +2,6 @@ package engine
 
 import (
 	"context"
-	"log"
 	"math/rand"
 	"testing"
 
@@ -16,7 +15,7 @@ func BenchmarkEngineWithCtx_Parallel256(b *testing.B) {
 		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
 		tp.BatchFunc, wp_ecbt)
 	if err != nil {
-		log.Fatal(err)
+		b.Fatal(err)
 	}
 
 	b.SetParallelism(256)
@@ -29,7 +28,7 @@ func BenchmarkEngineWithCtx_Parallel256(b *testing.B) {
 			br := e.Submit(i)
 			_, err := br.GetResultWithContext(context.Background())
 			if err != nil {
-				log.Fatal(err)
+				b.Fatal(err)
 			}
 		}
 	})
@@ -41,7 +40,7 @@ func BenchmarkEngineWithCtx_Parallel1024(b *testing.B) {
 		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
 		tp.BatchFunc, wp_ecbt)
 	if err != nil {
-		log.Fatal(err)
+		b.Fatal(err)
 	}
 
 	b.SetParallelism(1024)
@@ -54,7 +53,7 @@ func BenchmarkEngineWithCtx_Parallel1024(b *testing.B) {
 			br := e.Submit(i)
 			_, err := br.GetResultWithContext(context.Background())
 			if err != nil {
-				log.Fatal(err)
+				b.Fatal(err)
 			}
 		}
 	})
@@ -66,7 +65,7 @@ func BenchmarkEngineWithCtx_Parallel4096(b *testing.B) {
 		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
 		tp.BatchFunc, wp_ecbt)
 	if err != nil {
-		log.Fatal(err)
+		b.Fatal(err)
 	}
 
 	b.SetParallelism(4096)
@@ -79,7 +78,7 @@ func BenchmarkEngineWithCtx_Parallel4096(b *testing.B) {
 			br := e.Submit(i)
 			_, err := br.GetResultWithContext(context.Background())
 			if err != nil {
-				log.Fatal(err)
+				b.Fatal(err)
 			}
 		}
 	})

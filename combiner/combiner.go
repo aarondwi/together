@@ -11,7 +11,7 @@ import (
 //
 // This object is not pool-ed (for now), as for `AllSuccess`, `Race`, and their context idiom
 // has fast path, which means not all instances of this object can be return back to pool,
-// without moving it to yet another separate goroutine
+// without moving it to yet another separate goroutine (or another workerpool again)
 type resolutionHelper struct {
 	index  int
 	result interface{}

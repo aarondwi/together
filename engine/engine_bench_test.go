@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"log"
 	"math/rand"
 	"runtime"
 	"testing"
@@ -16,7 +15,7 @@ func BenchmarkEngine_Parallel256(b *testing.B) {
 		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
 		tp.BatchFunc, wp_ebt)
 	if err != nil {
-		log.Fatal(err)
+		b.Fatal(err)
 	}
 
 	b.SetParallelism(256)
@@ -29,7 +28,7 @@ func BenchmarkEngine_Parallel256(b *testing.B) {
 			br := e.Submit(i)
 			_, err := br.GetResult()
 			if err != nil {
-				log.Fatal(err)
+				b.Fatal(err)
 			}
 		}
 	})
@@ -41,7 +40,7 @@ func BenchmarkEngine_Parallel1024(b *testing.B) {
 		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
 		tp.BatchFunc, wp_ebt)
 	if err != nil {
-		log.Fatal(err)
+		b.Fatal(err)
 	}
 
 	b.SetParallelism(1024)
@@ -54,7 +53,7 @@ func BenchmarkEngine_Parallel1024(b *testing.B) {
 			br := e.Submit(i)
 			_, err := br.GetResult()
 			if err != nil {
-				log.Fatal(err)
+				b.Fatal(err)
 			}
 		}
 	})
@@ -66,7 +65,7 @@ func BenchmarkEngine_Parallel4096(b *testing.B) {
 		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
 		tp.BatchFunc, wp_ebt)
 	if err != nil {
-		log.Fatal(err)
+		b.Fatal(err)
 	}
 
 	b.SetParallelism(4096)
@@ -79,7 +78,7 @@ func BenchmarkEngine_Parallel4096(b *testing.B) {
 			br := e.Submit(i)
 			_, err := br.GetResult()
 			if err != nil {
-				log.Fatal(err)
+				b.Fatal(err)
 			}
 		}
 	})
@@ -91,7 +90,7 @@ func BenchmarkEngineSubmitMany(b *testing.B) {
 		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
 		tp.BatchFunc, wp_ebt)
 	if err != nil {
-		log.Fatal(err)
+		b.Fatal(err)
 	}
 
 	b.ReportAllocs()
@@ -115,7 +114,7 @@ func BenchmarkEngineSubmitMany(b *testing.B) {
 			for _, br := range brs {
 				_, err := br.GetResult()
 				if err != nil {
-					log.Fatal(err)
+					b.Fatal(err)
 				}
 			}
 		}
@@ -128,7 +127,7 @@ func BenchmarkEngineSubmitManyInto(b *testing.B) {
 		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
 		tp.BatchFunc, wp_ebt)
 	if err != nil {
-		log.Fatal(err)
+		b.Fatal(err)
 	}
 
 	b.ReportAllocs()
@@ -153,7 +152,7 @@ func BenchmarkEngineSubmitManyInto(b *testing.B) {
 			for _, br := range brs {
 				_, err := br.GetResult()
 				if err != nil {
-					log.Fatal(err)
+					b.Fatal(err)
 				}
 			}
 		}
@@ -166,7 +165,7 @@ func BenchmarkEngineSubmitMany_TwiceCoreNum(b *testing.B) {
 		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
 		tp.BatchFunc, wp_ebt)
 	if err != nil {
-		log.Fatal(err)
+		b.Fatal(err)
 	}
 
 	b.SetParallelism(runtime.NumCPU() * 2)
@@ -191,7 +190,7 @@ func BenchmarkEngineSubmitMany_TwiceCoreNum(b *testing.B) {
 			for _, br := range brs {
 				_, err := br.GetResult()
 				if err != nil {
-					log.Fatal(err)
+					b.Fatal(err)
 				}
 			}
 		}
@@ -204,7 +203,7 @@ func BenchmarkEngineSubmitManyInto_TwiceCoreNum(b *testing.B) {
 		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
 		tp.BatchFunc, wp_ebt)
 	if err != nil {
-		log.Fatal(err)
+		b.Fatal(err)
 	}
 
 	b.SetParallelism(runtime.NumCPU() * 2)
@@ -230,7 +229,7 @@ func BenchmarkEngineSubmitManyInto_TwiceCoreNum(b *testing.B) {
 			for _, br := range brs {
 				_, err := br.GetResult()
 				if err != nil {
-					log.Fatal(err)
+					b.Fatal(err)
 				}
 			}
 		}
@@ -243,7 +242,7 @@ func BenchmarkEngineSubmitMany_FourTimesCoreNum(b *testing.B) {
 		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
 		tp.BatchFunc, wp_ebt)
 	if err != nil {
-		log.Fatal(err)
+		b.Fatal(err)
 	}
 
 	b.SetParallelism(runtime.NumCPU() * 4)
@@ -268,7 +267,7 @@ func BenchmarkEngineSubmitMany_FourTimesCoreNum(b *testing.B) {
 			for _, br := range brs {
 				_, err := br.GetResult()
 				if err != nil {
-					log.Fatal(err)
+					b.Fatal(err)
 				}
 			}
 		}
@@ -281,7 +280,7 @@ func BenchmarkEngineSubmitManyInto_FourTimesCoreNum(b *testing.B) {
 		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
 		tp.BatchFunc, wp_ebt)
 	if err != nil {
-		log.Fatal(err)
+		b.Fatal(err)
 	}
 
 	b.SetParallelism(runtime.NumCPU() * 4)
@@ -307,7 +306,7 @@ func BenchmarkEngineSubmitManyInto_FourTimesCoreNum(b *testing.B) {
 			for _, br := range brs {
 				_, err := br.GetResult()
 				if err != nil {
-					log.Fatal(err)
+					b.Fatal(err)
 				}
 			}
 		}

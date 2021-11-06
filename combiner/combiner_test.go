@@ -3,7 +3,6 @@ package combiner
 import (
 	"context"
 	"errors"
-	"log"
 	"testing"
 	"time"
 
@@ -19,7 +18,7 @@ func TestAllSuccesses(t *testing.T) {
 
 	res, err := c.AllSuccess([]e.BatchResult{})
 	if err != nil || res != nil {
-		log.Fatalf("Both should be nil, but instead we got %v and %v", res, err)
+		t.Fatalf("Both should be nil, but instead we got %v and %v", res, err)
 	}
 
 	e1, _ := e.NewEngine(
@@ -44,14 +43,14 @@ func TestAllSuccesses(t *testing.T) {
 
 	resArr, err := c.AllSuccess([]e.BatchResult{res1, res2, res3, res4})
 	if err != nil {
-		log.Fatalf("It should not error, cause all ok, but we got %v", err)
+		t.Fatalf("It should not error, cause all ok, but we got %v", err)
 	}
 	if len(resArr) != 4 {
-		log.Fatalf("It should only be 4, cause we submit 4 times, but instead we got %v", resArr...)
+		t.Fatalf("It should only be 4, cause we submit 4 times, but instead we got %v", resArr...)
 	}
 	if resArr[0].(int) != 2 || resArr[1].(int) != 4 ||
 		resArr[2].(int) != 6 || resArr[3].(int) != 8 {
-		log.Fatalf("It should be 2, 4, 6, 8, but instead we got %v", resArr...)
+		t.Fatalf("It should be 2, 4, 6, 8, but instead we got %v", resArr...)
 	}
 
 	e2, _ := e.NewEngine(
@@ -68,7 +67,7 @@ func TestAllSuccesses(t *testing.T) {
 
 	_, err = c.AllSuccess([]e.BatchResult{res5, res6})
 	if err == nil || err != ErrTest {
-		log.Fatalf("It should return error ErrTest, but instead we got %v", err)
+		t.Fatalf("It should return error ErrTest, but instead we got %v", err)
 	}
 }
 
@@ -77,7 +76,7 @@ func TestAllSuccessesNilWorkerPool(t *testing.T) {
 
 	res, err := c.AllSuccess([]e.BatchResult{})
 	if err != nil || res != nil {
-		log.Fatalf("Both should be nil, but instead we got %v and %v", res, err)
+		t.Fatalf("Both should be nil, but instead we got %v and %v", res, err)
 	}
 
 	e1, _ := e.NewEngine(
@@ -102,14 +101,14 @@ func TestAllSuccessesNilWorkerPool(t *testing.T) {
 
 	resArr, err := c.AllSuccess([]e.BatchResult{res1, res2, res3, res4})
 	if err != nil {
-		log.Fatalf("It should not error, cause all ok, but we got %v", err)
+		t.Fatalf("It should not error, cause all ok, but we got %v", err)
 	}
 	if len(resArr) != 4 {
-		log.Fatalf("It should only be 4, cause we submit 4 times, but instead we got %v", resArr...)
+		t.Fatalf("It should only be 4, cause we submit 4 times, but instead we got %v", resArr...)
 	}
 	if resArr[0].(int) != 2 || resArr[1].(int) != 4 ||
 		resArr[2].(int) != 6 || resArr[3].(int) != 8 {
-		log.Fatalf("It should be 2, 4, 6, 8, but instead we got %v", resArr...)
+		t.Fatalf("It should be 2, 4, 6, 8, but instead we got %v", resArr...)
 	}
 
 	e2, _ := e.NewEngine(
@@ -126,7 +125,7 @@ func TestAllSuccessesNilWorkerPool(t *testing.T) {
 
 	_, err = c.AllSuccess([]e.BatchResult{res5, res6})
 	if err == nil || err != ErrTest {
-		log.Fatalf("It should return error ErrTest, but instead we got %v", err)
+		t.Fatalf("It should return error ErrTest, but instead we got %v", err)
 	}
 }
 
@@ -135,14 +134,14 @@ func TestAllSuccessesWithCtx(t *testing.T) {
 
 	res, err := c.AllSuccessWithContext(context.Background(), []e.BatchResult{})
 	if err != nil || res != nil {
-		log.Fatalf("Both should be nil, but instead we got %v and %v", res, err)
+		t.Fatalf("Both should be nil, but instead we got %v and %v", res, err)
 	}
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
 	_, err = c.AllSuccessWithContext(ctx, []e.BatchResult{})
 	if err == nil {
-		log.Fatal("Should return Err Cancelled, but instead we got nil")
+		t.Fatal("Should return Err Cancelled, but instead we got nil")
 	}
 
 	e1, _ := e.NewEngine(
@@ -167,14 +166,14 @@ func TestAllSuccessesWithCtx(t *testing.T) {
 	resArr, err := c.AllSuccessWithContext(
 		context.Background(), []e.BatchResult{res1, res2, res3, res4})
 	if err != nil {
-		log.Fatalf("It should not error, cause all ok, but we got %v", err)
+		t.Fatalf("It should not error, cause all ok, but we got %v", err)
 	}
 	if len(resArr) != 4 {
-		log.Fatalf("It should only be 4, cause we submit 4 times, but instead we got %v", resArr...)
+		t.Fatalf("It should only be 4, cause we submit 4 times, but instead we got %v", resArr...)
 	}
 	if resArr[0].(int) != 2 || resArr[1].(int) != 4 ||
 		resArr[2].(int) != 6 || resArr[3].(int) != 8 {
-		log.Fatalf("It should be 2 and 4, but instead we got %v", resArr...)
+		t.Fatalf("It should be 2 and 4, but instead we got %v", resArr...)
 	}
 
 	e2, _ := e.NewEngine(
@@ -191,7 +190,7 @@ func TestAllSuccessesWithCtx(t *testing.T) {
 
 	_, err = c.AllSuccessWithContext(context.Background(), []e.BatchResult{res5, res6})
 	if err == nil || err != ErrTest {
-		log.Fatalf("It should return error ErrTest, but instead we got %v", err)
+		t.Fatalf("It should return error ErrTest, but instead we got %v", err)
 	}
 }
 
@@ -200,14 +199,14 @@ func TestAllSuccessesWithCtxNilWorkerPool(t *testing.T) {
 
 	res, err := c.AllSuccessWithContext(context.Background(), []e.BatchResult{})
 	if err != nil || res != nil {
-		log.Fatalf("Both should be nil, but instead we got %v and %v", res, err)
+		t.Fatalf("Both should be nil, but instead we got %v and %v", res, err)
 	}
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
 	_, err = c.AllSuccessWithContext(ctx, []e.BatchResult{})
 	if err == nil {
-		log.Fatal("Should return Err Cancelled, but instead we got nil")
+		t.Fatal("Should return Err Cancelled, but instead we got nil")
 	}
 
 	e1, _ := e.NewEngine(
@@ -232,14 +231,14 @@ func TestAllSuccessesWithCtxNilWorkerPool(t *testing.T) {
 	resArr, err := c.AllSuccessWithContext(
 		context.Background(), []e.BatchResult{res1, res2, res3, res4})
 	if err != nil {
-		log.Fatalf("It should not error, cause all ok, but we got %v", err)
+		t.Fatalf("It should not error, cause all ok, but we got %v", err)
 	}
 	if len(resArr) != 4 {
-		log.Fatalf("It should only be 4, cause we submit 4 times, but instead we got %v", resArr...)
+		t.Fatalf("It should only be 4, cause we submit 4 times, but instead we got %v", resArr...)
 	}
 	if resArr[0].(int) != 2 || resArr[1].(int) != 4 ||
 		resArr[2].(int) != 6 || resArr[3].(int) != 8 {
-		log.Fatalf("It should be 2 and 4, but instead we got %v", resArr...)
+		t.Fatalf("It should be 2 and 4, but instead we got %v", resArr...)
 	}
 
 	e2, _ := e.NewEngine(
@@ -256,7 +255,7 @@ func TestAllSuccessesWithCtxNilWorkerPool(t *testing.T) {
 
 	_, err = c.AllSuccessWithContext(context.Background(), []e.BatchResult{res5, res6})
 	if err == nil || err != ErrTest {
-		log.Fatalf("It should return error ErrTest, but instead we got %v", err)
+		t.Fatalf("It should return error ErrTest, but instead we got %v", err)
 	}
 }
 
@@ -265,7 +264,7 @@ func TestRace(t *testing.T) {
 
 	res, errs := c.Race([]e.BatchResult{})
 	if errs != nil || res != nil {
-		log.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
+		t.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
 	}
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
@@ -323,20 +322,20 @@ func TestRace(t *testing.T) {
 
 	res, errs = c.Race([]e.BatchResult{br1, br2, br3})
 	if errs != nil {
-		log.Fatalf("errs should be nil, but instead we got %v", errs)
+		t.Fatalf("errs should be nil, but instead we got %v", errs)
 	}
 	if res.(int) != 15 {
-		log.Fatalf("We should receive result for `br3` which is 15, but instead we got %v", res)
+		t.Fatalf("We should receive result for `br3` which is 15, but instead we got %v", res)
 	}
 
 	br4 := e4.Submit(7)
 	br5 := e2.Submit(8)
 	_, errs = c.Race([]e.BatchResult{br4, br5})
 	if len(errs) != 2 {
-		log.Fatalf("errs should have len 2, but instead we got %v", errs)
+		t.Fatalf("errs should have len 2, but instead we got %v", errs)
 	}
 	if !(errs[0] == ErrTest2 && errs[1] == ErrTest) {
-		log.Fatalf("Receive wrong errs: %v", errs)
+		t.Fatalf("Receive wrong errs: %v", errs)
 	}
 }
 
@@ -345,7 +344,7 @@ func TestRaceNilWorkerPool(t *testing.T) {
 
 	res, errs := c.Race([]e.BatchResult{})
 	if errs != nil || res != nil {
-		log.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
+		t.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
 	}
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
@@ -403,20 +402,20 @@ func TestRaceNilWorkerPool(t *testing.T) {
 
 	res, errs = c.Race([]e.BatchResult{br1, br2, br3})
 	if errs != nil {
-		log.Fatalf("errs should be nil, but instead we got %v", errs)
+		t.Fatalf("errs should be nil, but instead we got %v", errs)
 	}
 	if res.(int) != 15 {
-		log.Fatalf("We should receive result for `br3` which is 15, but instead we got %v", res)
+		t.Fatalf("We should receive result for `br3` which is 15, but instead we got %v", res)
 	}
 
 	br4 := e4.Submit(7)
 	br5 := e2.Submit(8)
 	_, errs = c.Race([]e.BatchResult{br4, br5})
 	if len(errs) != 2 {
-		log.Fatalf("errs should have len 2, but instead we got %v", errs)
+		t.Fatalf("errs should have len 2, but instead we got %v", errs)
 	}
 	if !(errs[0] == ErrTest2 && errs[1] == ErrTest) {
-		log.Fatalf("Receive wrong errs: %v", errs)
+		t.Fatalf("Receive wrong errs: %v", errs)
 	}
 }
 
@@ -426,14 +425,14 @@ func TestRaceWithCtx(t *testing.T) {
 	res, errs := c.RaceWithContext(
 		context.Background(), []e.BatchResult{})
 	if errs != nil || res != nil {
-		log.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
+		t.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
 	}
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
 	_, errs = c.RaceWithContext(ctx, []e.BatchResult{})
 	if errs == nil || len(errs) != 0 {
-		log.Fatalf("errs have len zero, but instead we got %v", errs)
+		t.Fatalf("errs have len zero, but instead we got %v", errs)
 	}
 
 	e1, _ := e.NewEngine(
@@ -493,10 +492,10 @@ func TestRaceWithCtx(t *testing.T) {
 	res, errs = c.RaceWithContext(
 		context.Background(), []e.BatchResult{br1, br2, br3})
 	if errs != nil {
-		log.Fatalf("errs should be nil, but instead we got %v", errs)
+		t.Fatalf("errs should be nil, but instead we got %v", errs)
 	}
 	if res.(int) != 15 {
-		log.Fatalf("We should receive result for `br3` which is 15, but instead we got %v", res)
+		t.Fatalf("We should receive result for `br3` which is 15, but instead we got %v", res)
 	}
 
 	br4 := e4.Submit(7)
@@ -504,10 +503,10 @@ func TestRaceWithCtx(t *testing.T) {
 	_, errs = c.RaceWithContext(
 		context.Background(), []e.BatchResult{br4, br5})
 	if len(errs) != 2 {
-		log.Fatalf("errs should have len 2, but instead we got %v", errs)
+		t.Fatalf("errs should have len 2, but instead we got %v", errs)
 	}
 	if !(errs[0] == ErrTest2 && errs[1] == ErrTest) {
-		log.Fatalf("Receive wrong errs: %v", errs)
+		t.Fatalf("Receive wrong errs: %v", errs)
 	}
 }
 
@@ -517,14 +516,14 @@ func TestRaceWithCtxNilWorkerPool(t *testing.T) {
 	res, errs := c.RaceWithContext(
 		context.Background(), []e.BatchResult{})
 	if errs != nil || res != nil {
-		log.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
+		t.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
 	}
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
 	_, errs = c.RaceWithContext(ctx, []e.BatchResult{})
 	if errs == nil || len(errs) != 0 {
-		log.Fatalf("errs have len zero, but instead we got %v", errs)
+		t.Fatalf("errs have len zero, but instead we got %v", errs)
 	}
 
 	e1, _ := e.NewEngine(
@@ -584,10 +583,10 @@ func TestRaceWithCtxNilWorkerPool(t *testing.T) {
 	res, errs = c.RaceWithContext(
 		context.Background(), []e.BatchResult{br1, br2, br3})
 	if errs != nil {
-		log.Fatalf("errs should be nil, but instead we got %v", errs)
+		t.Fatalf("errs should be nil, but instead we got %v", errs)
 	}
 	if res.(int) != 15 {
-		log.Fatalf("We should receive result for `br3` which is 15, but instead we got %v", res)
+		t.Fatalf("We should receive result for `br3` which is 15, but instead we got %v", res)
 	}
 
 	br4 := e4.Submit(7)
@@ -595,10 +594,10 @@ func TestRaceWithCtxNilWorkerPool(t *testing.T) {
 	_, errs = c.RaceWithContext(
 		context.Background(), []e.BatchResult{br4, br5})
 	if len(errs) != 2 {
-		log.Fatalf("errs should have len 2, but instead we got %v", errs)
+		t.Fatalf("errs should have len 2, but instead we got %v", errs)
 	}
 	if !(errs[0] == ErrTest2 && errs[1] == ErrTest) {
-		log.Fatalf("Receive wrong errs: %v", errs)
+		t.Fatalf("Receive wrong errs: %v", errs)
 	}
 }
 
@@ -607,7 +606,7 @@ func TestEvery(t *testing.T) {
 
 	res, errs := c.Every([]e.BatchResult{})
 	if errs != nil || res != nil {
-		log.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
+		t.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
 	}
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
@@ -640,15 +639,15 @@ func TestEvery(t *testing.T) {
 
 	res, errs = c.Every([]e.BatchResult{br1, br2, br3, br4, br5})
 	if len(res) != 5 || len(errs) != 5 {
-		log.Fatalf("errs should be nil, but instead we got %v", errs)
+		t.Fatalf("errs should be nil, but instead we got %v", errs)
 	}
 	if !(errs[0] == nil && errs[1] == ErrTest &&
 		errs[2] == nil && errs[3] == ErrTest && errs[4] == nil) {
-		log.Fatalf("Receive wrong errs: %v", errs)
+		t.Fatalf("Receive wrong errs: %v", errs)
 	}
 	if !(res[0].(int) == 6 && res[1] == nil &&
 		res[2].(int) == 10 && res[3] == nil && res[4].(int) == 14) {
-		log.Fatalf("Receive wrong res: %v", res)
+		t.Fatalf("Receive wrong res: %v", res)
 	}
 }
 
@@ -657,7 +656,7 @@ func TestEveryNilWorkerPool(t *testing.T) {
 
 	res, errs := c.Every([]e.BatchResult{})
 	if errs != nil || res != nil {
-		log.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
+		t.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
 	}
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
@@ -690,15 +689,15 @@ func TestEveryNilWorkerPool(t *testing.T) {
 
 	res, errs = c.Every([]e.BatchResult{br1, br2, br3, br4, br5})
 	if len(res) != 5 || len(errs) != 5 {
-		log.Fatalf("errs should be nil, but instead we got %v", errs)
+		t.Fatalf("errs should be nil, but instead we got %v", errs)
 	}
 	if !(errs[0] == nil && errs[1] == ErrTest &&
 		errs[2] == nil && errs[3] == ErrTest && errs[4] == nil) {
-		log.Fatalf("Receive wrong errs: %v", errs)
+		t.Fatalf("Receive wrong errs: %v", errs)
 	}
 	if !(res[0].(int) == 6 && res[1] == nil &&
 		res[2].(int) == 10 && res[3] == nil && res[4].(int) == 14) {
-		log.Fatalf("Receive wrong res: %v", res)
+		t.Fatalf("Receive wrong res: %v", res)
 	}
 }
 
@@ -708,14 +707,14 @@ func TestEveryWithCtx(t *testing.T) {
 	res, errs := c.EveryWithContext(
 		context.Background(), []e.BatchResult{})
 	if errs != nil || res != nil {
-		log.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
+		t.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
 	}
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
 	_, errs = c.EveryWithContext(ctx, []e.BatchResult{})
 	if errs == nil || len(errs) != 0 {
-		log.Fatalf("errs have len zero, but instead we got %v", errs)
+		t.Fatalf("errs have len zero, but instead we got %v", errs)
 	}
 
 	e1, _ := e.NewEngine(
@@ -749,15 +748,15 @@ func TestEveryWithCtx(t *testing.T) {
 
 	res, errs = c.EveryWithContext(context.Background(), []e.BatchResult{br1, br2, br3, br4, br5})
 	if len(res) != 5 || len(errs) != 5 {
-		log.Fatalf("errs should be nil, but instead we got %v", errs)
+		t.Fatalf("errs should be nil, but instead we got %v", errs)
 	}
 	if !(errs[0] == nil && errs[1] == ErrTest &&
 		errs[2] == nil && errs[3] == ErrTest && errs[4] == nil) {
-		log.Fatalf("Receive wrong errs: %v", errs)
+		t.Fatalf("Receive wrong errs: %v", errs)
 	}
 	if !(res[0].(int) == 6 && res[1] == nil &&
 		res[2].(int) == 10 && res[3] == nil && res[4].(int) == 14) {
-		log.Fatalf("Receive wrong res: %v", res)
+		t.Fatalf("Receive wrong res: %v", res)
 	}
 }
 
@@ -767,14 +766,14 @@ func TestEveryWithCtxNilWorkerPool(t *testing.T) {
 	res, errs := c.EveryWithContext(
 		context.Background(), []e.BatchResult{})
 	if errs != nil || res != nil {
-		log.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
+		t.Fatalf("Both should be nil, but instead we got %v and %v", res, errs)
 	}
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	cancelFunc()
 	_, errs = c.EveryWithContext(ctx, []e.BatchResult{})
 	if errs == nil || len(errs) != 0 {
-		log.Fatalf("errs have len zero, but instead we got %v", errs)
+		t.Fatalf("errs have len zero, but instead we got %v", errs)
 	}
 
 	e1, _ := e.NewEngine(
@@ -808,14 +807,14 @@ func TestEveryWithCtxNilWorkerPool(t *testing.T) {
 
 	res, errs = c.EveryWithContext(context.Background(), []e.BatchResult{br1, br2, br3, br4, br5})
 	if len(res) != 5 || len(errs) != 5 {
-		log.Fatalf("errs should be nil, but instead we got %v", errs)
+		t.Fatalf("errs should be nil, but instead we got %v", errs)
 	}
 	if !(errs[0] == nil && errs[1] == ErrTest &&
 		errs[2] == nil && errs[3] == ErrTest && errs[4] == nil) {
-		log.Fatalf("Receive wrong errs: %v", errs)
+		t.Fatalf("Receive wrong errs: %v", errs)
 	}
 	if !(res[0].(int) == 6 && res[1] == nil &&
 		res[2].(int) == 10 && res[3] == nil && res[4].(int) == 14) {
-		log.Fatalf("Receive wrong res: %v", res)
+		t.Fatalf("Receive wrong res: %v", res)
 	}
 }
