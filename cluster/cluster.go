@@ -30,6 +30,8 @@ var ErrNilPartitionerFunc = errors.New(
 //
 // Note that this implementation is goroutine-safe, even without lock/atomic.
 // This is because all variables can't (and won't, for now) be changed after creation, only be read.
+//
+// For now, `SubmitMany` and its context idiom will allocate slices on hot path to accomodate the temporary args
 type Cluster struct {
 	numOfPartition int
 	engines        []*e.Engine
@@ -38,7 +40,7 @@ type Cluster struct {
 
 // NewCluster creates our cluster.
 //
-// 5 last params are the exact same as a single engine,
+// 3 last params are the exact same as a single engine,
 // and directly applied to each engine
 //
 // Notes for `partitioner` param, the given function
@@ -95,7 +97,62 @@ func (c *Cluster) Submit(
 	return c.SubmitToPartition(c.partitioner(arg), arg)
 }
 
-// Submit selects and puts arg into engine number `partitionNum`.
+// SubmitMany puts args into their correct partitions.
+// To do so, it calls partitioner for each arg, and puts them into their respective temporary data
+//
+// There are 2 other ways to do so:
+//
+// 1. Do checking on each arg against each engine. This remove all needs to have intermediary state and so allocation, but need do to that while holding locks
+//
+// 2. The same as current way, but as bitmap. Only needs 1/8 of memory compared to this implementation, but harder to read
+//
+// These function creates lots of allocation (roughly 5 + 2*numOfPartition), in which each engine need to do additional allocation (So becomes 5 + 3 * numOfPartition). This is needed even with 2 other algorithms above.
+// If you can manage which arg goes where, using `SubmitManyToPartition` directly can save lots of allocation
+func (c *Cluster) SubmitMany(
+	args []interface{}) ([]e.BatchResult, error) {
+
+	if c.partitioner == nil {
+		return e.EmptyBatchResultSlice, ErrNilPartitionerFunc
+	}
+
+	// these 2 variables are used
+	// to track which arg got where
+	// as we need to return the BatchResult in the same order as args
+	//
+	// This is done to avoid looping for every args and every partition, which is (numOfPartition * len(args))
+	currentIdxForPartitions := make([]int, c.numOfPartition) // zero value of int is zero
+	positions := make([]int, 0, len(args))
+
+	// directly on full length, cause will directly assign to it
+	temporaryResults := make([][]e.BatchResult, c.numOfPartition)
+	result := make([]e.BatchResult, 0, len(args))
+
+	temporaries := make([][]interface{}, 0, c.numOfPartition)
+	for i := 0; i < c.numOfPartition; i++ {
+		temporaries = append(temporaries, make([]interface{}, 0, len(args)))
+	}
+
+	for _, arg := range args {
+		idx := c.partitioner(arg)
+		temporaries[idx] = append(temporaries[idx], arg)
+		positions = append(positions, idx)
+	}
+
+	for i, t := range temporaries {
+		temporaryResults[i] = c.engines[i].SubmitMany(t)
+	}
+
+	// this is the reordering part
+	// just as a reminder, positions hold index of which partition
+	for i := 0; i < len(args); i++ {
+		result = append(result, temporaryResults[positions[i]][currentIdxForPartitions[positions[i]]])
+		currentIdxForPartitions[positions[i]]++
+	}
+
+	return result, nil
+}
+
+// SubmitToPartition puts arg into engine number `partitionNum`.
 func (c *Cluster) SubmitToPartition(
 	partitionNum int,
 	arg interface{}) (e.BatchResult, error) {
@@ -104,4 +161,15 @@ func (c *Cluster) SubmitToPartition(
 		return e.EmptyBatchResult, ErrPartitionNumOutOfRange
 	}
 	return c.engines[partitionNum].Submit(arg), nil
+}
+
+// SubmitManyToPartition puts bunch of args at once into engine number `partitionNum`.
+func (c *Cluster) SubmitManyToPartition(
+	partitionNum int,
+	args []interface{}) ([]e.BatchResult, error) {
+
+	if partitionNum < 0 || partitionNum >= c.numOfPartition {
+		return e.EmptyBatchResultSlice, ErrPartitionNumOutOfRange
+	}
+	return c.engines[partitionNum].SubmitMany(args), nil
 }

@@ -3,6 +3,7 @@ package engine
 import (
 	"log"
 	"math/rand"
+	"runtime"
 	"testing"
 
 	tp "github.com/aarondwi/together/testparam"
@@ -79,6 +80,235 @@ func BenchmarkEngine_Parallel4096(b *testing.B) {
 			_, err := br.GetResult()
 			if err != nil {
 				log.Fatal(err)
+			}
+		}
+	})
+}
+
+func BenchmarkEngineSubmitMany(b *testing.B) {
+	var wp_ebt = WP.GetDefaultWorkerPool()
+	e, err := NewEngine(
+		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
+		tp.BatchFunc, wp_ebt)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	b.ReportAllocs()
+	b.SetBytes(256 * 8) // A batch of 256 ints
+
+	ch := make(chan []interface{}, 16)
+	go func() {
+		for {
+			res := make([]interface{}, 0, 256)
+			for i := 0; i < 256; i++ {
+				res = append(res, i)
+			}
+			ch <- res
+		}
+	}()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			r := <-ch
+			brs := e.SubmitMany(r)
+			for _, br := range brs {
+				_, err := br.GetResult()
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+	})
+}
+
+func BenchmarkEngineSubmitManyInto(b *testing.B) {
+	var wp_ebt = WP.GetDefaultWorkerPool()
+	e, err := NewEngine(
+		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
+		tp.BatchFunc, wp_ebt)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	b.ReportAllocs()
+	b.SetBytes(256 * 8) // A batch of 256 ints
+
+	ch := make(chan []interface{}, 16)
+	go func() {
+		for {
+			res := make([]interface{}, 0, 256)
+			for i := 0; i < 256; i++ {
+				res = append(res, i)
+			}
+			ch <- res
+		}
+	}()
+
+	b.RunParallel(func(pb *testing.PB) {
+		brs := make([]BatchResult, 0, 256)
+		for pb.Next() {
+			r := <-ch
+			e.SubmitManyInto(r, &brs)
+			for _, br := range brs {
+				_, err := br.GetResult()
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+	})
+}
+
+func BenchmarkEngineSubmitMany_TwiceCoreNum(b *testing.B) {
+	var wp_ebt = WP.GetDefaultWorkerPool()
+	e, err := NewEngine(
+		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
+		tp.BatchFunc, wp_ebt)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	b.SetParallelism(runtime.NumCPU() * 2)
+	b.ReportAllocs()
+	b.SetBytes(256 * 8) // A batch of 256 ints
+
+	ch := make(chan []interface{}, 16)
+	go func() {
+		for {
+			res := make([]interface{}, 0, 256)
+			for i := 0; i < 256; i++ {
+				res = append(res, i)
+			}
+			ch <- res
+		}
+	}()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			r := <-ch
+			brs := e.SubmitMany(r)
+			for _, br := range brs {
+				_, err := br.GetResult()
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+	})
+}
+
+func BenchmarkEngineSubmitManyInto_TwiceCoreNum(b *testing.B) {
+	var wp_ebt = WP.GetDefaultWorkerPool()
+	e, err := NewEngine(
+		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
+		tp.BatchFunc, wp_ebt)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	b.SetParallelism(runtime.NumCPU() * 2)
+	b.ReportAllocs()
+	b.SetBytes(256 * 8) // A batch of 256 ints
+
+	ch := make(chan []interface{}, 16)
+	go func() {
+		for {
+			res := make([]interface{}, 0, 256)
+			for i := 0; i < 256; i++ {
+				res = append(res, i)
+			}
+			ch <- res
+		}
+	}()
+
+	b.RunParallel(func(pb *testing.PB) {
+		brs := make([]BatchResult, 0, 256)
+		for pb.Next() {
+			r := <-ch
+			e.SubmitManyInto(r, &brs)
+			for _, br := range brs {
+				_, err := br.GetResult()
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+	})
+}
+
+func BenchmarkEngineSubmitMany_FourTimesCoreNum(b *testing.B) {
+	var wp_ebt = WP.GetDefaultWorkerPool()
+	e, err := NewEngine(
+		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
+		tp.BatchFunc, wp_ebt)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	b.SetParallelism(runtime.NumCPU() * 4)
+	b.ReportAllocs()
+	b.SetBytes(256 * 8) // A batch of 256 ints
+
+	ch := make(chan []interface{}, 16)
+	go func() {
+		for {
+			res := make([]interface{}, 0, 256)
+			for i := 0; i < 256; i++ {
+				res = append(res, i)
+			}
+			ch <- res
+		}
+	}()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			r := <-ch
+			brs := e.SubmitMany(r)
+			for _, br := range brs {
+				_, err := br.GetResult()
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+	})
+}
+
+func BenchmarkEngineSubmitManyInto_FourTimesCoreNum(b *testing.B) {
+	var wp_ebt = WP.GetDefaultWorkerPool()
+	e, err := NewEngine(
+		EngineConfig{tp.NUM_OF_WORKER, tp.NUM_OF_ARGS_TO_WAIT, tp.SLEEP_DURATION},
+		tp.BatchFunc, wp_ebt)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	b.SetParallelism(runtime.NumCPU() * 4)
+	b.ReportAllocs()
+	b.SetBytes(256 * 8) // A batch of 256 ints
+
+	ch := make(chan []interface{}, 16)
+	go func() {
+		for {
+			res := make([]interface{}, 0, 256)
+			for i := 0; i < 256; i++ {
+				res = append(res, i)
+			}
+			ch <- res
+		}
+	}()
+
+	b.RunParallel(func(pb *testing.PB) {
+		brs := make([]BatchResult, 0, 256)
+		for pb.Next() {
+			r := <-ch
+			e.SubmitManyInto(r, &brs)
+			for _, br := range brs {
+				_, err := br.GetResult()
+				if err != nil {
+					log.Fatal(err)
+				}
 			}
 		}
 	})

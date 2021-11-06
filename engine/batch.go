@@ -30,7 +30,10 @@ type BatchResult struct {
 	batch *Batch
 }
 
-var EmptyBatchResult = BatchResult{}
+var (
+	EmptyBatchResult      = BatchResult{}
+	EmptyBatchResultSlice = make([]BatchResult, 0)
+)
 
 // NewBatch creates a new batch
 //

@@ -46,6 +46,7 @@ go get -u github.com/aarondwi/together
 7. Waiting multiple results at once, to reduce latency (Using `Combiner` implementation).
 8. Non-context and context variant available. (for timeout-based, hedge-requests, etc)
 9. Separating submitting and waiting results, to allow fire-and-forget cases.
+10. Submit `Many` idiom, to directly put bunch of params with single lock.
 
 ## Usages
 
@@ -55,7 +56,7 @@ For how to write typical business logic as batch, please see [here](https://gith
 ## Recommendations
 
 1. Start with simpler pattern, such as those with key-value access only. This typically constitute large number of requests, and very simple to batch (akin to `SELECT * FROM a_table_name WHERE some_field IN (...)`, or redis pipelines, memcache's multi_get).
-2. Pool your business objects, to reduce allocations. This is another source of non-useful work.
+2. Reduce allocations, as this is another source of non-useful work. See [here](https://github.com/aarondwi/notes/blob/main/WebAppsAlloc.md)
 3. Prefer pessimistic rather than optimistic concurrency control, so you can control how complex your logic should be without rollbacking everything.
 
 ## Notes
@@ -75,6 +76,6 @@ If you (or a library you are using) still insist to use `panic`, please `recover
 ## TODO: Nice to have
 
 1. Dynamic sizing of batch sizes, waiting time, and worker number. Based on upstream latency and/or work in queue, or even custom (?).
-2. Add `SubmitMany` call, that put many params with one lock call only.
-3. Add support for generic, once golang supports it.
-4. Add map-based batch. Useful typically for case where multiple keys could be the same.
+2. Add support for generic, once golang supports it.
+3. Add map-based batch. Useful typically for case where multiple keys could be the same.
+4. If possible, pool both cluster's `Many` idioms slices' creation and combiner's `inderResolutionHelper`.

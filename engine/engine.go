@@ -107,7 +107,7 @@ func (e *Engine) worker() {
 //
 // 2. just bad engine configuration (numOfWorker too low, etc)
 //
-// This is a conscious decision, to not balloon the memory requirement
+// This is a conscious decision, to not balloon the memory requirement, at least for now.
 func (e *Engine) readyToWork() {
 	e.batchChan <- e.currentBatch
 	e.currentBatch = nil
@@ -139,20 +139,73 @@ func (e *Engine) timeoutWatchdog() {
 	}
 }
 
-// Submit puts arg to current batch to be worked on by background goroutine.
-func (e *Engine) Submit(arg interface{}) BatchResult {
-	e.mu.Lock()
+// This function should only be called when holding the mutex
+func (e *Engine) ensureBatch() {
 	if e.currentBatch == nil {
 		e.batchID++
 		e.currentBatch = NewBatch(e.batchID, e.wp)
 		e.newBatch.Signal()
 	}
-	e.taskID++
-	br := e.currentBatch.Put(e.taskID, arg)
-	if e.currentBatch.argSize == e.argSizeLimit {
+}
+
+// This function should only be called when holding the mutex
+func (e *Engine) checkReadiness() {
+	if e.currentBatch.argSize >= e.argSizeLimit {
 		e.readyToWork()
 	}
+}
+
+// Submit puts arg to current batch to be worked on by background goroutine.
+func (e *Engine) Submit(arg interface{}) BatchResult {
+	e.mu.Lock()
+	e.ensureBatch()
+
+	e.taskID++
+	br := e.currentBatch.Put(e.taskID, arg)
+
+	e.checkReadiness()
 	e.mu.Unlock()
 
 	return br
+}
+
+// SubmitMany puts bunch of args into current batch.
+//
+// It would allocate a slice on hot path to accomodate the result
+func (e *Engine) SubmitMany(args []interface{}) []BatchResult {
+	// create slices outside of mutex, reduce holding time (even only ns)
+	result := make([]BatchResult, 0, len(args))
+
+	e.mu.Lock()
+	e.ensureBatch()
+
+	for _, arg := range args {
+		e.taskID++
+		br := e.currentBatch.Put(e.taskID, arg)
+		result = append(result, br)
+	}
+
+	e.checkReadiness()
+	e.mu.Unlock()
+
+	return result
+}
+
+// SubmitManyInto puts args to current batch, and store BatchResult into result
+//
+// Mainly used to control result's slice allocation
+func (e *Engine) SubmitManyInto(args []interface{}, result *[]BatchResult) {
+	e.mu.Lock()
+	e.ensureBatch()
+
+	// ensure already zero length
+	*result = (*result)[:0]
+	for _, arg := range args {
+		e.taskID++
+		br := e.currentBatch.Put(e.taskID, arg)
+		*result = append(*result, br)
+	}
+
+	e.checkReadiness()
+	e.mu.Unlock()
 }
