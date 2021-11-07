@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"errors"
+	"sync"
 
 	e "github.com/aarondwi/together/engine"
 	WP "github.com/aarondwi/together/workerpool"
@@ -31,11 +32,20 @@ var ErrNilPartitionerFunc = errors.New(
 // Note that this implementation is goroutine-safe, even without lock/atomic.
 // This is because all variables can't (and won't, for now) be changed after creation, only be read.
 //
-// For now, `SubmitMany` and its context idiom will allocate slices on hot path to accomodate the temporary args
+// Note that lots of sync.Pool in the definition is used for `SubmitMany()`, as it allocates approximately (5 + 3 * numOfPartition) slices.
+// All of them also return pointer to slices, as slice object is another allocation on heap
 type Cluster struct {
 	numOfPartition int
 	engines        []*e.Engine
 	partitioner    func(arg interface{}) int
+
+	currentIdxForPartitionsPool sync.Pool
+	positionsPool               sync.Pool
+
+	temporaryResultSlicePool sync.Pool
+	temporaryResultsPool     sync.Pool
+	temporaryArgSlicePool    sync.Pool
+	temporaryArgsPool        sync.Pool
 }
 
 // NewCluster creates our cluster.
@@ -80,6 +90,43 @@ func NewCluster(
 		numOfPartition: numOfPartition,
 		engines:        engines,
 		partitioner:    partitioner,
+		currentIdxForPartitionsPool: sync.Pool{
+			// zero value of int is zero
+			New: func() interface{} {
+				s := make([]int, numOfPartition)
+				return &s
+			},
+		},
+		positionsPool: sync.Pool{
+			New: func() interface{} {
+				s := make([]int, 0, 64) // good buffer size
+				return &s
+			},
+		},
+		temporaryResultSlicePool: sync.Pool{
+			New: func() interface{} {
+				s := make([]*[]e.BatchResult, 0, numOfPartition)
+				return &s
+			},
+		},
+		temporaryResultsPool: sync.Pool{
+			New: func() interface{} {
+				s := make([]e.BatchResult, 0, 64)
+				return &s
+			},
+		},
+		temporaryArgSlicePool: sync.Pool{
+			New: func() interface{} {
+				s := make([]*[]interface{}, 0, numOfPartition)
+				return &s
+			},
+		},
+		temporaryArgsPool: sync.Pool{
+			New: func() interface{} {
+				s := make([]interface{}, 0, 64) // good buffer size
+				return &s
+			},
+		},
 	}, nil
 }
 
@@ -106,8 +153,8 @@ func (c *Cluster) Submit(
 //
 // 2. The same as current way, but as bitmap. Only needs 1/8 of memory compared to this implementation, but harder to read
 //
-// These function creates lots of allocation (roughly 5 + 2*numOfPartition), in which each engine need to do additional allocation (So becomes 5 + 3 * numOfPartition). This is needed even with 2 other algorithms above.
-// If you can manage which arg goes where, using `SubmitManyToPartition` directly can save lots of allocation
+// This implementation currently is very, very pointer heavy, due to the need to reduce allocation (and thus GC pressure).
+// Be sure not to check this while tired, high, or anything like that
 func (c *Cluster) SubmitMany(
 	args []interface{}) ([]e.BatchResult, error) {
 
@@ -115,39 +162,70 @@ func (c *Cluster) SubmitMany(
 		return e.EmptyBatchResultSlice, ErrNilPartitionerFunc
 	}
 
-	// these 2 variables are used
+	// these variables are used
 	// to track which arg got where
 	// as we need to return the BatchResult in the same order as args
 	//
 	// This is done to avoid looping for every args and every partition, which is (numOfPartition * len(args))
-	currentIdxForPartitions := make([]int, c.numOfPartition) // zero value of int is zero
-	positions := make([]int, 0, len(args))
+	currentIdxForPartitions := c.currentIdxForPartitionsPool.Get().(*[]int)
+	positions := c.positionsPool.Get().(*[]int)
 
-	// directly on full length, cause will directly assign to it
-	temporaryResults := make([][]e.BatchResult, c.numOfPartition)
+	temporaryResults := c.temporaryResultSlicePool.Get().(*([]*[]e.BatchResult))
+	for i := 0; i < c.numOfPartition; i++ {
+		*temporaryResults = append(*temporaryResults, c.temporaryResultsPool.Get().(*[]e.BatchResult))
+	}
+
+	temporaryArgs := c.temporaryArgSlicePool.Get().(*([]*[]interface{}))
+	for i := 0; i < c.numOfPartition; i++ {
+		*temporaryArgs = append(*temporaryArgs, c.temporaryArgsPool.Get().(*[]interface{}))
+	}
+
+	// this one can't be pooled transparently, need caller (user) to participate
 	result := make([]e.BatchResult, 0, len(args))
 
-	temporaries := make([][]interface{}, 0, c.numOfPartition)
-	for i := 0; i < c.numOfPartition; i++ {
-		temporaries = append(temporaries, make([]interface{}, 0, len(args)))
-	}
-
+	// assign each arg to the correct partition
 	for _, arg := range args {
 		idx := c.partitioner(arg)
-		temporaries[idx] = append(temporaries[idx], arg)
-		positions = append(positions, idx)
+		*(*temporaryArgs)[idx] = append(*(*temporaryArgs)[idx], arg)
+		*positions = append(*positions, idx)
 	}
-
-	for i, t := range temporaries {
-		temporaryResults[i] = c.engines[i].SubmitMany(t)
+	for i, t := range *temporaryArgs {
+		c.engines[i].SubmitManyInto(*t, (*temporaryResults)[i])
 	}
 
 	// this is the reordering part
 	// just as a reminder, positions hold index of which partition
 	for i := 0; i < len(args); i++ {
-		result = append(result, temporaryResults[positions[i]][currentIdxForPartitions[positions[i]]])
-		currentIdxForPartitions[positions[i]]++
+		result = append(result,
+			(*(*temporaryResults)[(*positions)[i]])[(*currentIdxForPartitions)[(*positions)[i]]])
+		(*currentIdxForPartitions)[(*positions)[i]]++
 	}
+
+	/////////////////////////////////////////////////////////////
+	// Return all to pools
+	/////////////////////////////////////////////////////////////
+	for i := 0; i < c.numOfPartition; i++ {
+		(*currentIdxForPartitions)[i] = 0
+	}
+	c.currentIdxForPartitionsPool.Put(currentIdxForPartitions)
+
+	*positions = (*positions)[:0]
+	c.positionsPool.Put(positions)
+
+	for i := 0; i < c.numOfPartition; i++ {
+		*(*temporaryArgs)[i] = (*(*temporaryArgs)[i])[:0]
+		c.temporaryArgsPool.Put((*temporaryArgs)[i])
+	}
+	*temporaryArgs = (*temporaryArgs)[:0]
+	c.temporaryArgSlicePool.Put(temporaryArgs)
+
+	for i := 0; i < c.numOfPartition; i++ {
+		*(*temporaryResults)[i] = (*(*temporaryResults)[i])[:0]
+		c.temporaryResultsPool.Put((*temporaryResults)[i])
+	}
+	*temporaryResults = (*temporaryResults)[:0]
+	c.temporaryResultSlicePool.Put(temporaryResults)
+	/////////////////////////////////////////////////////////////
 
 	return result, nil
 }
