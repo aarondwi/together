@@ -97,12 +97,12 @@ func BenchmarkEngineSubmitMany(b *testing.B) {
 	b.SetBytes(256 * 8) // A batch of 256 ints
 
 	ch := make(chan []interface{}, 16)
+	res := make([]interface{}, 0, 256)
+	for i := 0; i < 256; i++ {
+		res = append(res, i)
+	}
 	go func() {
 		for {
-			res := make([]interface{}, 0, 256)
-			for i := 0; i < 256; i++ {
-				res = append(res, i)
-			}
 			ch <- res
 		}
 	}()
@@ -134,12 +134,12 @@ func BenchmarkEngineSubmitManyInto(b *testing.B) {
 	b.SetBytes(256 * 8) // A batch of 256 ints
 
 	ch := make(chan []interface{}, 16)
+	res := make([]interface{}, 0, 256)
+	for i := 0; i < 256; i++ {
+		res = append(res, i)
+	}
 	go func() {
 		for {
-			res := make([]interface{}, 0, 256)
-			for i := 0; i < 256; i++ {
-				res = append(res, i)
-			}
 			ch <- res
 		}
 	}()
@@ -148,6 +148,7 @@ func BenchmarkEngineSubmitManyInto(b *testing.B) {
 		brs := make([]BatchResult, 0, 256)
 		for pb.Next() {
 			r := <-ch
+			brs = brs[:0]
 			e.SubmitManyInto(r, &brs)
 			for _, br := range brs {
 				_, err := br.GetResult()
@@ -173,12 +174,12 @@ func BenchmarkEngineSubmitMany_TwiceCoreNum(b *testing.B) {
 	b.SetBytes(256 * 8) // A batch of 256 ints
 
 	ch := make(chan []interface{}, 16)
+	res := make([]interface{}, 0, 256)
+	for i := 0; i < 256; i++ {
+		res = append(res, i)
+	}
 	go func() {
 		for {
-			res := make([]interface{}, 0, 256)
-			for i := 0; i < 256; i++ {
-				res = append(res, i)
-			}
 			ch <- res
 		}
 	}()
@@ -211,12 +212,12 @@ func BenchmarkEngineSubmitManyInto_TwiceCoreNum(b *testing.B) {
 	b.SetBytes(256 * 8) // A batch of 256 ints
 
 	ch := make(chan []interface{}, 16)
+	res := make([]interface{}, 0, 256)
+	for i := 0; i < 256; i++ {
+		res = append(res, i)
+	}
 	go func() {
 		for {
-			res := make([]interface{}, 0, 256)
-			for i := 0; i < 256; i++ {
-				res = append(res, i)
-			}
 			ch <- res
 		}
 	}()
@@ -225,6 +226,7 @@ func BenchmarkEngineSubmitManyInto_TwiceCoreNum(b *testing.B) {
 		brs := make([]BatchResult, 0, 256)
 		for pb.Next() {
 			r := <-ch
+			brs = brs[:0]
 			e.SubmitManyInto(r, &brs)
 			for _, br := range brs {
 				_, err := br.GetResult()
@@ -250,12 +252,12 @@ func BenchmarkEngineSubmitMany_FourTimesCoreNum(b *testing.B) {
 	b.SetBytes(256 * 8) // A batch of 256 ints
 
 	ch := make(chan []interface{}, 16)
+	res := make([]interface{}, 0, 256)
+	for i := 0; i < 256; i++ {
+		res = append(res, i)
+	}
 	go func() {
 		for {
-			res := make([]interface{}, 0, 256)
-			for i := 0; i < 256; i++ {
-				res = append(res, i)
-			}
 			ch <- res
 		}
 	}()
@@ -288,12 +290,12 @@ func BenchmarkEngineSubmitManyInto_FourTimesCoreNum(b *testing.B) {
 	b.SetBytes(256 * 8) // A batch of 256 ints
 
 	ch := make(chan []interface{}, 16)
+	res := make([]interface{}, 0, 256)
+	for i := 0; i < 256; i++ {
+		res = append(res, i)
+	}
 	go func() {
 		for {
-			res := make([]interface{}, 0, 256)
-			for i := 0; i < 256; i++ {
-				res = append(res, i)
-			}
 			ch <- res
 		}
 	}()
@@ -302,6 +304,7 @@ func BenchmarkEngineSubmitManyInto_FourTimesCoreNum(b *testing.B) {
 		brs := make([]BatchResult, 0, 256)
 		for pb.Next() {
 			r := <-ch
+			brs = brs[:0]
 			e.SubmitManyInto(r, &brs)
 			for _, br := range brs {
 				_, err := br.GetResult()

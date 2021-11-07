@@ -46,6 +46,8 @@ type Engine struct {
 }
 
 // EngineConfig is the config object for our engine
+//
+// Note that ArgSizeLimit is only a soft limit.
 type EngineConfig struct {
 	NumOfWorker  int
 	ArgSizeLimit int
@@ -194,12 +196,12 @@ func (e *Engine) SubmitMany(args []interface{}) []BatchResult {
 // SubmitManyInto puts args to current batch, and store BatchResult into result
 //
 // Mainly used to control result's slice allocation
+//
+// Note that the result will be appended to, so will (and can) be re-allocated for more spaces
 func (e *Engine) SubmitManyInto(args []interface{}, result *[]BatchResult) {
 	e.mu.Lock()
 	e.ensureBatch()
 
-	// ensure already zero length
-	*result = (*result)[:0]
 	for _, arg := range args {
 		e.taskID++
 		br := e.currentBatch.Put(e.taskID, arg)

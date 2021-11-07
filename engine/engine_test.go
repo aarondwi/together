@@ -184,7 +184,7 @@ func TestEngineSubmitManyInto(t *testing.T) {
 	for i := 0; i < 12; i++ {
 		requests = append(requests, i)
 	}
-	results := make([]BatchResult, 12)
+	results := make([]BatchResult, 0, 12)
 	e.SubmitManyInto(requests, &results)
 	for i, res := range results {
 		r, err := res.GetResult()

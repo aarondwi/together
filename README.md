@@ -73,6 +73,10 @@ Other complex implementations have their own downsides, such as:
 4. This library will never include `panic` handling, because IMO, it is a bad practice. `panic` should only be used when keep going is dangerous for integrity, and the best solution is to just **crash**.
 If you (or a library you are using) still insist to use `panic`, please `recover` it and return error instead.
 
+## Notes for benchmarks
+
+We use 1 message per `Submit()` for the normal usage to mimic the outermost services, which need to combine many small messages. The `SubmitMany()` benchmarks use a batch of 256 to mimic upstream services, which can receive batches from outer services, instead of one by one.
+
 ## TODO: Nice to have
 
 1. Dynamic sizing of batch sizes, waiting time, and worker number. Based on upstream latency and/or work in queue, or even custom (?).
