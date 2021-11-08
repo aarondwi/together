@@ -31,6 +31,10 @@ type WorkerFn func(map[uint64]interface{}) (map[uint64]interface{}, error)
 // User just need to specify the config on `NewEngine` call,
 // and then use `Submit()` call on logic code.
 //
+// Internally, this implementation uses a slice, to hold inflight data.
+// In the future, if the need arises, will add map-based batch.
+// Useful typically for case where multiple keys could be the same.
+//
 // This implementation is goroutine-safe
 type Engine struct {
 	mu           *sync.Mutex

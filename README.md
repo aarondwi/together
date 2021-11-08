@@ -77,8 +77,7 @@ If you (or a library you are using) still insist to use `panic`, please `recover
 
 We use 1 message per `Submit()` for the normal usage to mimic the outermost services, which need to combine many small messages. The `SubmitMany()` benchmarks use a batch of 256 to mimic upstream services, which can receive batches from outer services, instead of one by one.
 
-## TODO: Nice to have
+## Nice to have
 
-1. Dynamic sizing of batch sizes, waiting time, and worker number. Based on upstream latency and/or work in queue, or even custom (?).
+1. Dynamic sizing of batch sizes, waiting time, or worker number. Based on upstream latency and/or work in queue, or even custom (?).
 2. Support for generic, once golang supports it. (How to adapt combiner's semantic though?)
-3. Map-based batch. Useful typically for case where multiple keys could be the same.

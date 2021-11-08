@@ -145,9 +145,11 @@ func (c *Cluster) Submit(
 }
 
 // SubmitMany puts args into their correct partitions.
-// To do so, it calls partitioner for each arg, and puts them into their respective temporary data
+// To do so, it calls partitioner for each arg, and puts them into their respective temporary data.
+// Then, it returns []BatchResult with same order as the respective args.
+// In the future, if the need arises, probably will allow non-ordered result, which may increase performance.
 //
-// There are 2 other ways to do so:
+// There are 2 other ways to hold the position/temporary data:
 //
 // 1. Do checking on each arg against each engine. This remove all needs to have intermediary state and so allocation, but need do to that while holding locks
 //
@@ -162,9 +164,8 @@ func (c *Cluster) SubmitMany(
 		return e.EmptyBatchResultSlice, ErrNilPartitionerFunc
 	}
 
-	// these variables are used
-	// to track which arg got where
-	// as we need to return the BatchResult in the same order as args
+	// these variables are used to track which arg got where
+	// as we need to return the BatchResult in the same order as args.
 	//
 	// This is done to avoid looping for every args and every partition, which is (numOfPartition * len(args))
 	currentIdxForPartitions := c.currentIdxForPartitionsPool.Get().(*[]int)

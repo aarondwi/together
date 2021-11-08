@@ -69,7 +69,8 @@ func NewWorkerPool(
 
 // Submit select a random channel, and then put fn there
 //
-// if the given channel is full AND `allowRuntimeCreation`, create a new goroutine instead
+// For now, if the given channel is full AND `allowRuntimeCreation`, create a new goroutine instead.
+// In the future, will change to somehow track and reuse new goroutines.
 func (wp *WorkerPool) Submit(fn func()) {
 	if !wp.allowRuntimeCreation {
 		wp.channels[wp.partitioner(nil)] <- fn

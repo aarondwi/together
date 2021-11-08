@@ -9,15 +9,7 @@ import (
 
 // resolutionHelper is used as an intermediary object passed between goroutines
 //
-// This object is not pool-ed (for now), as for `AllSuccess`, `Race`, and their context idiom
-// has fast path, which means not all instances of this object can be return back to pool,
-// without moving it to yet another separate goroutine (or another workerpool again).
-//
-// Currently, it is not pooled, as:
-//
-// 1. mostly those using this feature are outer services. They are easier to scale (stateless, right?). They also mostly only receive individual work + parallelize mostly 2 or 3 calls, not batches, which means pooling this or allocating another goroutine instead are the same
-//
-// 2. or should we go partially reused? Which could be either on `AllSuccess`/`Race` fast path, and `Every` all path.
+// The pooled version for resolutionHelper is already tried, and doesn't save allocations at all
 type resolutionHelper struct {
 	index  int
 	result interface{}
@@ -117,19 +109,10 @@ func (c *Combiner) applyWithCtx(
 	}
 }
 
-// AllSuccess waits for all BatchResult to be returned, or one error be returned.
-//
-// If all succeed, this will return array of response in the same order as params, with nil error.
-// Else, it returns the first error only.
-func (c *Combiner) AllSuccess(brs []e.BatchResult) ([]interface{}, error) {
-	if len(brs) == 0 {
-		return nil, nil
-	}
-
+func (c *Combiner) allSuccessGather(
+	brs []e.BatchResult,
+	ch chan resolutionHelper) ([]interface{}, error) {
 	results := make([]interface{}, len(brs))
-	ch := make(chan resolutionHelper, len(brs))
-	c.apply(brs, ch)
-
 	for i := 0; i < len(brs); i++ {
 		resHelper := <-ch
 		if resHelper.result != nil {
@@ -139,6 +122,19 @@ func (c *Combiner) AllSuccess(brs []e.BatchResult) ([]interface{}, error) {
 		}
 	}
 	return results, nil
+}
+
+// AllSuccess waits for all BatchResult to be returned, or one error be returned.
+//
+// If all succeed, this will return array of response in the same order as params, with nil error.
+// Else, it returns the first error only.
+func (c *Combiner) AllSuccess(brs []e.BatchResult) ([]interface{}, error) {
+	if len(brs) == 0 {
+		return nil, nil
+	}
+	ch := make(chan resolutionHelper, len(brs))
+	c.apply(brs, ch)
+	return c.allSuccessGather(brs, ch)
 }
 
 // AllSuccessWithContext is the same as `All` call, but with context idiom.
@@ -164,19 +160,24 @@ func (c *Combiner) AllSuccessWithContext(
 	ctx2, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	results := make([]interface{}, len(brs))
 	ch := make(chan resolutionHelper, len(brs))
 	c.applyWithCtx(ctx2, brs, ch)
+	return c.allSuccessGather(brs, ch)
+}
 
+func (c *Combiner) raceGather(
+	brs []e.BatchResult,
+	ch chan resolutionHelper) (interface{}, []error) {
+	errs := make([]error, len(brs))
 	for i := 0; i < len(brs); i++ {
 		resHelper := <-ch
-		if resHelper.result != nil {
-			results[resHelper.index] = resHelper.result
+		if resHelper.err != nil {
+			errs[resHelper.index] = resHelper.err
 		} else {
-			return nil, resHelper.err
+			return resHelper.result, nil
 		}
 	}
-	return results, nil
+	return nil, errs
 }
 
 // Race waits until either one result is returned.
@@ -186,21 +187,9 @@ func (c *Combiner) Race(brs []e.BatchResult) (interface{}, []error) {
 	if len(brs) == 0 {
 		return nil, nil
 	}
-
-	errs := make([]error, len(brs))
 	ch := make(chan resolutionHelper, len(brs))
 	c.apply(brs, ch)
-
-	for i := 0; i < len(brs); i++ {
-		resHelper := <-ch
-		if resHelper.err != nil {
-			errs[resHelper.index] = resHelper.err
-		} else {
-			return resHelper.result, nil
-		}
-	}
-
-	return nil, errs
+	return c.raceGather(brs, ch)
 }
 
 // RaceWithContext is the same as `Race` call, but with context idiom.
@@ -230,36 +219,16 @@ func (c *Combiner) RaceWithContext(
 	ctx2, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	errs := make([]error, len(brs))
 	ch := make(chan resolutionHelper, len(brs))
 	c.applyWithCtx(ctx2, brs, ch)
-
-	for i := 0; i < len(brs); i++ {
-		resHelper := <-ch
-		if resHelper.err != nil {
-			errs[resHelper.index] = resHelper.err
-		} else {
-			return resHelper.result, nil
-		}
-	}
-
-	return nil, errs
+	return c.raceGather(brs, ch)
 }
 
-// Every waits until all results/errors to be returned.
-//
-// Result will be nil if err exists, else err will be nil
-// in the same order as params (so may be nil on one index, and not nil on another)
-func (c *Combiner) Every(brs []e.BatchResult) ([]interface{}, []error) {
-	if len(brs) == 0 {
-		return nil, nil
-	}
-
+func (c *Combiner) everyGather(
+	brs []e.BatchResult,
+	ch chan resolutionHelper) ([]interface{}, []error) {
 	results := make([]interface{}, len(brs))
 	errs := make([]error, len(brs))
-	ch := make(chan resolutionHelper, len(brs))
-	c.apply(brs, ch)
-
 	for i := 0; i < len(brs); i++ {
 		resHelper := <-ch
 		if resHelper.result != nil {
@@ -271,6 +240,19 @@ func (c *Combiner) Every(brs []e.BatchResult) ([]interface{}, []error) {
 		}
 	}
 	return results, errs
+}
+
+// Every waits until all results/errors to be returned.
+//
+// Result will be nil if err exists, else err will be nil
+// in the same order as params (so may be nil on one index, and not nil on another)
+func (c *Combiner) Every(brs []e.BatchResult) ([]interface{}, []error) {
+	if len(brs) == 0 {
+		return nil, nil
+	}
+	ch := make(chan resolutionHelper, len(brs))
+	c.apply(brs, ch)
+	return c.everyGather(brs, ch)
 }
 
 // EveryWithContext is the same as `Every` call, but with context idiom.
@@ -294,20 +276,7 @@ func (c *Combiner) EveryWithContext(
 		return nil, nil
 	}
 
-	results := make([]interface{}, len(brs))
-	errs := make([]error, len(brs))
 	ch := make(chan resolutionHelper, len(brs))
 	c.applyWithCtx(ctx, brs, ch)
-
-	for i := 0; i < len(brs); i++ {
-		resHelper := <-ch
-		if resHelper.result != nil {
-			results[resHelper.index] = resHelper.result
-			errs[resHelper.index] = nil
-		} else {
-			results[resHelper.index] = nil
-			errs[resHelper.index] = resHelper.err
-		}
-	}
-	return results, errs
+	return c.everyGather(brs, ch)
 }
