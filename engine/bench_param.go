@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	NUM_OF_WORKER       = 128
+	NUM_OF_WORKER       = 256
 	NUM_OF_ARGS_TO_WAIT = 1024
 )
 

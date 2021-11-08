@@ -3,19 +3,27 @@ package cluster
 import (
 	"math/rand"
 	"runtime"
+	"sync"
 	"testing"
 
 	e "github.com/aarondwi/together/engine"
 	WP "github.com/aarondwi/together/workerpool"
 )
 
+var wpb *WP.WorkerPool
+var once sync.Once
+
+func initClusterWP() {
+	wpb = WP.GetDefaultWorkerPool()
+}
+
 func BenchmarkCluster_Partition4_Parallel256(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_4, WP.GetDefaultPartitioner(e.PARTITION_4),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_4),
 		e.BatchFunc,
-		wp_cbt)
+		wpb)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -40,12 +48,12 @@ func BenchmarkCluster_Partition4_Parallel256(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition4_Parallel1024(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_4, WP.GetDefaultPartitioner(e.PARTITION_4),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_4),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -71,12 +79,12 @@ func BenchmarkCluster_Partition4_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition4_Parallel4096(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_4, WP.GetDefaultPartitioner(e.PARTITION_4),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_4),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -102,12 +110,12 @@ func BenchmarkCluster_Partition4_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition8_Parallel256(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_8, WP.GetDefaultPartitioner(e.PARTITION_8),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_8),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -133,12 +141,12 @@ func BenchmarkCluster_Partition8_Parallel256(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition8_Parallel1024(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_8, WP.GetDefaultPartitioner(e.PARTITION_8),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_8),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -164,12 +172,12 @@ func BenchmarkCluster_Partition8_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition8_Parallel4096(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_8, WP.GetDefaultPartitioner(e.PARTITION_8),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_8),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -195,12 +203,12 @@ func BenchmarkCluster_Partition8_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition16_Parallel256(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_16, WP.GetDefaultPartitioner(e.PARTITION_16),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_16),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -226,12 +234,12 @@ func BenchmarkCluster_Partition16_Parallel256(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition16_Parallel1024(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_16, WP.GetDefaultPartitioner(e.PARTITION_16),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_16),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -257,12 +265,12 @@ func BenchmarkCluster_Partition16_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkCluster_Partition16_Parallel4096(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_16, WP.GetDefaultPartitioner(e.PARTITION_16),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_16),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -288,12 +296,12 @@ func BenchmarkCluster_Partition16_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition4(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_4, WP.GetDefaultPartitioner(e.PARTITION_4),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_4),
 		e.BatchFunc,
-		wp_cbt)
+		wpb)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -330,12 +338,12 @@ func BenchmarkCluster_SubmitMany_Partition4(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition4_TwiceCoreNum(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_4, WP.GetDefaultPartitioner(e.PARTITION_4),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_4),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -374,12 +382,12 @@ func BenchmarkCluster_SubmitMany_Partition4_TwiceCoreNum(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition4_FourTimesCoreNum(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_4, WP.GetDefaultPartitioner(e.PARTITION_4),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_4),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -418,12 +426,12 @@ func BenchmarkCluster_SubmitMany_Partition4_FourTimesCoreNum(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition4_EightTimesCoreNum(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_4, WP.GetDefaultPartitioner(e.PARTITION_4),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_4),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -462,12 +470,12 @@ func BenchmarkCluster_SubmitMany_Partition4_EightTimesCoreNum(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition4_SixteenTimesCoreNum(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_4, WP.GetDefaultPartitioner(e.PARTITION_4),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_4),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -506,12 +514,12 @@ func BenchmarkCluster_SubmitMany_Partition4_SixteenTimesCoreNum(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition8(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_8, WP.GetDefaultPartitioner(e.PARTITION_8),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_8),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -549,12 +557,12 @@ func BenchmarkCluster_SubmitMany_Partition8(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition8_TwiceCoreNum(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_8, WP.GetDefaultPartitioner(e.PARTITION_8),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_8),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -593,12 +601,12 @@ func BenchmarkCluster_SubmitMany_Partition8_TwiceCoreNum(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition8_FourTimesCoreNum(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_8, WP.GetDefaultPartitioner(e.PARTITION_8),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_8),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -637,12 +645,12 @@ func BenchmarkCluster_SubmitMany_Partition8_FourTimesCoreNum(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition8_EightTimesCoreNum(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_8, WP.GetDefaultPartitioner(e.PARTITION_8),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_8),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -681,12 +689,12 @@ func BenchmarkCluster_SubmitMany_Partition8_EightTimesCoreNum(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition8_SixteenTimesCoreNum(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_8, WP.GetDefaultPartitioner(e.PARTITION_8),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_8),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -725,12 +733,12 @@ func BenchmarkCluster_SubmitMany_Partition8_SixteenTimesCoreNum(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition16(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_16, WP.GetDefaultPartitioner(e.PARTITION_16),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_16),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -768,12 +776,12 @@ func BenchmarkCluster_SubmitMany_Partition16(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition16_TwiceCoreNum(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_16, WP.GetDefaultPartitioner(e.PARTITION_16),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_16),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -812,12 +820,12 @@ func BenchmarkCluster_SubmitMany_Partition16_TwiceCoreNum(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition16_FourTimesCoreNum(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_16, WP.GetDefaultPartitioner(e.PARTITION_16),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_16),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -856,12 +864,12 @@ func BenchmarkCluster_SubmitMany_Partition16_FourTimesCoreNum(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition16_EightTimesCoreNum(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_16, WP.GetDefaultPartitioner(e.PARTITION_16),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_16),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)
@@ -900,12 +908,12 @@ func BenchmarkCluster_SubmitMany_Partition16_EightTimesCoreNum(b *testing.B) {
 }
 
 func BenchmarkCluster_SubmitMany_Partition16_SixteenTimesCoreNum(b *testing.B) {
-	var wp_cbt = WP.GetDefaultWorkerPool()
+	once.Do(initClusterWP)
 	c, err := NewCluster(
 		e.PARTITION_16, WP.GetDefaultPartitioner(e.PARTITION_16),
 		e.GetEngineConfigForBenchmarks(e.PARTITION_16),
 		e.BatchFunc,
-		wp_cbt,
+		wpb,
 	)
 	if err != nil {
 		b.Fatal(err)

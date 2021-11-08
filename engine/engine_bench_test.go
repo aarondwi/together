@@ -3,16 +3,24 @@ package engine
 import (
 	"math/rand"
 	"runtime"
+	"sync"
 	"testing"
 
 	WP "github.com/aarondwi/together/workerpool"
 )
 
+var wpb *WP.WorkerPool
+var once sync.Once
+
+func initEngineWP() {
+	wpb = WP.GetDefaultWorkerPool()
+}
+
 func BenchmarkEngine_Parallel256(b *testing.B) {
-	var wp_ebt = WP.GetDefaultWorkerPool()
+	once.Do(initEngineWP)
 	e, err := NewEngine(
 		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
-		BatchFunc, wp_ebt)
+		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -34,10 +42,10 @@ func BenchmarkEngine_Parallel256(b *testing.B) {
 }
 
 func BenchmarkEngine_Parallel1024(b *testing.B) {
-	var wp_ebt = WP.GetDefaultWorkerPool()
+	once.Do(initEngineWP)
 	e, err := NewEngine(
 		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
-		BatchFunc, wp_ebt)
+		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -59,10 +67,10 @@ func BenchmarkEngine_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkEngine_Parallel4096(b *testing.B) {
-	var wp_ebt = WP.GetDefaultWorkerPool()
+	once.Do(initEngineWP)
 	e, err := NewEngine(
 		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
-		BatchFunc, wp_ebt)
+		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -84,10 +92,10 @@ func BenchmarkEngine_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkEngineSubmitMany(b *testing.B) {
-	var wp_ebt = WP.GetDefaultWorkerPool()
+	once.Do(initEngineWP)
 	e, err := NewEngine(
 		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
-		BatchFunc, wp_ebt)
+		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -121,10 +129,10 @@ func BenchmarkEngineSubmitMany(b *testing.B) {
 }
 
 func BenchmarkEngineSubmitManyInto(b *testing.B) {
-	var wp_ebt = WP.GetDefaultWorkerPool()
+	once.Do(initEngineWP)
 	e, err := NewEngine(
 		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
-		BatchFunc, wp_ebt)
+		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -160,10 +168,10 @@ func BenchmarkEngineSubmitManyInto(b *testing.B) {
 }
 
 func BenchmarkEngineSubmitMany_TwiceCoreNum(b *testing.B) {
-	var wp_ebt = WP.GetDefaultWorkerPool()
+	once.Do(initEngineWP)
 	e, err := NewEngine(
 		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
-		BatchFunc, wp_ebt)
+		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -198,10 +206,10 @@ func BenchmarkEngineSubmitMany_TwiceCoreNum(b *testing.B) {
 }
 
 func BenchmarkEngineSubmitManyInto_TwiceCoreNum(b *testing.B) {
-	var wp_ebt = WP.GetDefaultWorkerPool()
+	once.Do(initEngineWP)
 	e, err := NewEngine(
 		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
-		BatchFunc, wp_ebt)
+		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -238,10 +246,10 @@ func BenchmarkEngineSubmitManyInto_TwiceCoreNum(b *testing.B) {
 }
 
 func BenchmarkEngineSubmitMany_FourTimesCoreNum(b *testing.B) {
-	var wp_ebt = WP.GetDefaultWorkerPool()
+	once.Do(initEngineWP)
 	e, err := NewEngine(
 		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
-		BatchFunc, wp_ebt)
+		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -276,10 +284,10 @@ func BenchmarkEngineSubmitMany_FourTimesCoreNum(b *testing.B) {
 }
 
 func BenchmarkEngineSubmitManyInto_FourTimesCoreNum(b *testing.B) {
-	var wp_ebt = WP.GetDefaultWorkerPool()
+	once.Do(initEngineWP)
 	e, err := NewEngine(
 		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
-		BatchFunc, wp_ebt)
+		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
 	}

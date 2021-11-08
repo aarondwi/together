@@ -3,14 +3,22 @@ package combiner
 import (
 	"math/rand"
 	"runtime"
+	"sync"
 	"testing"
 
 	e "github.com/aarondwi/together/engine"
 	WP "github.com/aarondwi/together/workerpool"
 )
 
+var wpb *WP.WorkerPool
+var once sync.Once
+
+func initCombinerWP() {
+	wpb = WP.GetDefaultWorkerPool()
+}
+
 func BenchmarkAllSuccess_4Services_Parallel256(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_4, wpb)
 
@@ -36,7 +44,7 @@ func BenchmarkAllSuccess_4Services_Parallel256(b *testing.B) {
 }
 
 func BenchmarkAllSuccess_4Services_Parallel1024(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_4, wpb)
 
@@ -62,7 +70,7 @@ func BenchmarkAllSuccess_4Services_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkAllSuccess_4Services_Parallel4096(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_4, wpb)
 
@@ -88,7 +96,7 @@ func BenchmarkAllSuccess_4Services_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkAllSuccess_8Services_Parallel256(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_8, wpb)
 
@@ -114,7 +122,7 @@ func BenchmarkAllSuccess_8Services_Parallel256(b *testing.B) {
 }
 
 func BenchmarkAllSuccess_8Services_Parallel1024(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_8, wpb)
 
@@ -140,7 +148,7 @@ func BenchmarkAllSuccess_8Services_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkAllSuccess_8Services_Parallel4096(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_8, wpb)
 
@@ -166,7 +174,7 @@ func BenchmarkAllSuccess_8Services_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkAllSuccess_16Services_Parallel256(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_16, wpb)
 
@@ -192,7 +200,7 @@ func BenchmarkAllSuccess_16Services_Parallel256(b *testing.B) {
 }
 
 func BenchmarkAllSuccess_16Services_Parallel1024(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_16, wpb)
 
@@ -218,7 +226,7 @@ func BenchmarkAllSuccess_16Services_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkAllSuccess_16Services_Parallel4096(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_16, wpb)
 
@@ -244,7 +252,7 @@ func BenchmarkAllSuccess_16Services_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkRace_4Services_Parallel256(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_4, wpb)
 
@@ -270,7 +278,7 @@ func BenchmarkRace_4Services_Parallel256(b *testing.B) {
 }
 
 func BenchmarkRace_4Services_Parallel1024(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_4, wpb)
 
@@ -296,7 +304,7 @@ func BenchmarkRace_4Services_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkRace_4Services_Parallel4096(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_4, wpb)
 
@@ -322,7 +330,7 @@ func BenchmarkRace_4Services_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkRace_8Services_Parallel256(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_8, wpb)
 
@@ -348,7 +356,7 @@ func BenchmarkRace_8Services_Parallel256(b *testing.B) {
 }
 
 func BenchmarkRace_8Services_Parallel1024(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_8, wpb)
 
@@ -374,7 +382,7 @@ func BenchmarkRace_8Services_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkRace_8Services_Parallel4096(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_8, wpb)
 
@@ -400,7 +408,7 @@ func BenchmarkRace_8Services_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkRace_16Services_Parallel256(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_16, wpb)
 
@@ -426,7 +434,7 @@ func BenchmarkRace_16Services_Parallel256(b *testing.B) {
 }
 
 func BenchmarkRace_16Services_Parallel1024(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_16, wpb)
 
@@ -452,7 +460,7 @@ func BenchmarkRace_16Services_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkRace_16Services_Parallel4096(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_16, wpb)
 
@@ -478,7 +486,7 @@ func BenchmarkRace_16Services_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkEvery_4Services_Parallel256(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_4, wpb)
 
@@ -506,7 +514,7 @@ func BenchmarkEvery_4Services_Parallel256(b *testing.B) {
 }
 
 func BenchmarkEvery_4Services_Parallel1024(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_4, wpb)
 
@@ -534,7 +542,7 @@ func BenchmarkEvery_4Services_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkEvery_4Services_Parallel4096(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_4, wpb)
 
@@ -562,7 +570,7 @@ func BenchmarkEvery_4Services_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkEvery_8Services_Parallel256(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_8, wpb)
 
@@ -590,7 +598,7 @@ func BenchmarkEvery_8Services_Parallel256(b *testing.B) {
 }
 
 func BenchmarkEvery_8Services_Parallel1024(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_8, wpb)
 
@@ -618,7 +626,7 @@ func BenchmarkEvery_8Services_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkEvery_8Services_Parallel4096(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_8, wpb)
 
@@ -646,7 +654,7 @@ func BenchmarkEvery_8Services_Parallel4096(b *testing.B) {
 }
 
 func BenchmarkEvery_16Services_Parallel256(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_16, wpb)
 
@@ -674,7 +682,7 @@ func BenchmarkEvery_16Services_Parallel256(b *testing.B) {
 }
 
 func BenchmarkEvery_16Services_Parallel1024(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_16, wpb)
 
@@ -702,7 +710,7 @@ func BenchmarkEvery_16Services_Parallel1024(b *testing.B) {
 }
 
 func BenchmarkEvery_16Services_Parallel4096(b *testing.B) {
-	wpb := WP.GetDefaultWorkerPool()
+	once.Do(initCombinerWP)
 	c := NewCombiner(wpb)
 	engines := e.GetEnginesForBenchmarks(e.PARTITION_16, wpb)
 
