@@ -39,7 +39,7 @@ go get -u github.com/aarondwi/together
 
 1. Small and clear codebase (~1000 LoC), excluding tests.
 2. General enough to be used for any batching case, and can easily be abstracted higher.
-3. Fast. On my test laptop, with worker simulating relatively network call by sleeping for 2ms, `Cluster` reaching ~1 million invocation/s.
+3. Fast. On my test laptop, with workers simulating relatively fast network call by sleeping for 1-3ms, reaching 1-2 million work/s.
 4. Easy promise-like API (just use `Submit` or equivalent call), and all params will be available to batch worker. You just need to return the call with same key as the given parameters.
 5. Circumvent single lock contention using `Cluster` implementation.
 6. Optional background worker, so no goroutine creations on hot path (using tunable `WorkerPool`).
@@ -80,6 +80,5 @@ We use 1 message per `Submit()` for the normal usage to mimic the outermost serv
 ## TODO: Nice to have
 
 1. Dynamic sizing of batch sizes, waiting time, and worker number. Based on upstream latency and/or work in queue, or even custom (?).
-2. Add support for generic, once golang supports it.
-3. Add map-based batch. Useful typically for case where multiple keys could be the same.
-4. Pool combiner's `inderResolutionHelper`.
+2. Support for generic, once golang supports it. (How to adapt combiner's semantic though?)
+3. Map-based batch. Useful typically for case where multiple keys could be the same.

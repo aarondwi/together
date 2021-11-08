@@ -11,7 +11,13 @@ import (
 //
 // This object is not pool-ed (for now), as for `AllSuccess`, `Race`, and their context idiom
 // has fast path, which means not all instances of this object can be return back to pool,
-// without moving it to yet another separate goroutine (or another workerpool again)
+// without moving it to yet another separate goroutine (or another workerpool again).
+//
+// Currently, it is not pooled, as:
+//
+// 1. mostly those using this feature are outer services. They are easier to scale (stateless, right?). They also mostly only receive individual work + parallelize mostly 2 or 3 calls, not batches, which means pooling this or allocating another goroutine instead are the same
+//
+// 2. or should we go partially reused? Which could be either on `AllSuccess`/`Race` fast path, and `Every` all path.
 type resolutionHelper struct {
 	index  int
 	result interface{}
@@ -30,8 +36,12 @@ type resolutionHelper struct {
 //
 // On every call, buffered channel is created, to prevent goroutine leak.
 //
-// Notes do to the nature of the problem, this implementation do a few allocations on hot path.
+// Do to the nature of the problem, this implementation do a few allocations on hot path.
+// They can't easily be pooled, without either making complex code or needing caller's assistance.
 // Use this implementation sparingly.
+//
+// Note that even after generic exists for golang, it is doubtful how to incorporate generic to this implementation,
+// because it should not assume all types returned gonna be the same. (unless, a union type is also introduced)
 type Combiner struct {
 	wp *WP.WorkerPool
 }
