@@ -69,9 +69,19 @@ This is by design, because we either want to batch for throughput, or for saving
 which has rate-limiter/pay-per-call, but allow multiple message in each call).
 Other complex implementations have their own downsides, such as:
     * waiting only if more than specific number of connection, like in [PostgreSQL](https://postgresqlco.nf/doc/en/param/commit_siblings/), gonna make the API harder (and weird) to be incorporated into business-level code.
-    * getting from the queue and working the batch as fast as possible, like in [Tarantool](https://dzone.com/articles/asynchronous-processing-with-in-memory-databases-o) or [Aurora](https://www.semanticscholar.org/paper/Amazon-Aurora%3A-On-Avoiding-Distributed-Consensus-Verbitski-Gupta/fa4a2b8ab110472c6d8b1b19baa81af21800468b), may results in better throughput and/or latency overall, but not as useful for the saving goal.
+    * getting from the queue and working the batch as fast as possible (basically [Smart Batching](http://mechanical-sympathy.blogspot.com/2011/10/smart-batching.html)), like in [Tarantool](https://dzone.com/articles/asynchronous-processing-with-in-memory-databases-o) or [Aurora](https://www.semanticscholar.org/paper/Amazon-Aurora%3A-On-Avoiding-Distributed-Consensus-Verbitski-Gupta/fa4a2b8ab110472c6d8b1b19baa81af21800468b), may results in better throughput and/or latency overall, but not as useful for the saving goal. In OLTP setup, where typical user entire end-to-end latency is >=200ms, waiting ~5-10ms for a batch is not a problem at all.
 4. This library will never include `panic` handling, because IMO, it is a bad practice. `panic` should only be used when keep going is dangerous for integrity, and the best solution is to just **crash**.
 If you (or a library you are using) still insist to use `panic`, please `recover` it and return error instead.
+5. For now, there are no plans to support dynamic, adaptive setup (a la [Netflix adaptive concurrency limit](https://netflixtechblog.medium.com/performance-under-load-3e6fa9a60581)). Besides cause this library gonna need more tuning (number of worker, batch size, waiting size, how to handle savings, etc) which makes it really really complex, together's Batch Buffering already absorbs most of the contention from requests, and upstream services easily become CPU bottlenecked. Adaptivity just gonna make CPU not operating at maximum available capacity.
+
+## Setup Recommendation
+
+1. For business logic setup, set normal large batch (~64-128 is good). For lots key-value access from a single requests, 256, 512 or more is good
+2. Not so much worker per `engine` instance (2-8 should be enough)
+3. Waiting number to be at most the same as typical duration of a batch (if a full batch needs ~20ms, 10-20ms batch waiting time is good, getting good enough balance between latency, throughput, contention reduction via buffering, and call savings)
+4. Separate `engine` and `cluster` instance for each needs (For example, placing order and getting item details are very different requests, with very different complexity and duration of requests). But, use same `Workerpool` instance (with quite large number of goroutines, e.g. >5-10K) to amortize all the waiting goroutines
+
+For example, if an `engine` instance has a batch size of 128, 4 workers, full batch work time ~10ms (this is a rather slow one for batched key-value access, but make sense for more complex business logic), and assuming those batches keep filled cause of spike traffic, this engine instance can do `4 workers * 128/batch * (1 second / 10 ms)` = 51200 rps, which far surpass most businesses' needs.
 
 ## Notes for benchmarks
 
@@ -79,5 +89,5 @@ We use 1 message per `Submit()` for the normal usage to mimic the outermost serv
 
 ## Nice to have
 
-1. Dynamic sizing of batch sizes, waiting time, or worker number. Based on upstream latency and/or work in queue, or even custom (?).
-2. Support for generic, once golang supports it. (How to adapt combiner's semantic though?)
+1. Support for generic, once golang supports it. (How to adapt combiner's semantic though?)
+2. Workerpool to have rate-limited, max new goroutine per second, so not fire-and-forget goroutines only, but amortized to a number of works
