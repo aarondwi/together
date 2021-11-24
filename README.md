@@ -53,12 +53,6 @@ go get -u github.com/aarondwi/together
 To use this library, see the [engine](https://github.com/aarondwi/together/blob/main/engine/engine_test.go), [cluster](https://github.com/aarondwi/together/blob/main/cluster/cluster_test.go), and [combiner](https://github.com/aarondwi/together/blob/main/combiner/combiner_test.go) test files directly for the most up-to-date example.
 For how to write typical business logic as batch, please see [here](https://github.com/aarondwi/batch-logic-example)
 
-## Recommendations
-
-1. Start with simpler pattern, such as those with key-value access only. This typically constitute large number of requests, and very simple to batch (akin to `SELECT * FROM a_table_name WHERE some_field IN (...)`, or redis pipelines, memcache's multi_get).
-2. Reduce allocations, as this is another source of non-useful work. See [here](https://github.com/aarondwi/notes/blob/main/WebAppsAlloc.md)
-3. Prefer pessimistic rather than optimistic concurrency control, so you can control how complex your logic should be without rollbacking everything.
-
 ## Notes
 
 1. This is **NOT** a batch processor like [spring batch](https://spring.io/projects/spring-batch), [dbt](https://www.getdbt.com/), [spark](https://spark.apache.org/), or anything like that. `This library does combining/deduplicating/scatter-gather multiple request into (preferably) single request to backend, like how Facebook manages its [memcache's flow](https://www.mimuw.edu.pl/~iwanicki/courses/ds/2016/presentations/08_Pawlowska.pdf) or Quora with their [asynq](https://github.com/quora/asynq).
@@ -74,7 +68,13 @@ Other complex implementations have their own downsides, such as:
 If you (or a library you are using) still insist to use `panic`, please `recover` it and return error instead.
 5. For now, there are no plans to support dynamic, adaptive setup (a la [Netflix adaptive concurrency limit](https://netflixtechblog.medium.com/performance-under-load-3e6fa9a60581)). Besides cause this library gonna need more tuning (number of worker, batch size, waiting size, how to handle savings, etc) which makes it really really complex, together's Batch Buffering already absorbs most of the contention from requests, and upstream services easily become CPU bottlenecked. Adaptivity just gonna make CPU not operating at maximum available capacity.
 
-## Setup Recommendation
+## On incorporating / using
+
+1. Start with simpler pattern, such as those with key-value access only. This typically constitute large number of requests, and very simple to batch (akin to `SELECT * FROM a_table_name WHERE some_field IN (...)`, or redis pipelines, memcache's multi_get).
+2. Prefer pessimistic rather than optimistic concurrency control, so you can control how complex your logic should be without rollbacking everything.
+3. Reduce allocations, as this is another source of non-useful work. See [here](https://github.com/aarondwi/notes/blob/main/WebAppsAlloc.md). CPU for allocations are better used for Together's logic
+
+## Setup Recommendations
 
 1. For business logic setup, set normal large batch (~64-128 is good). For lots key-value access from a single requests, 256, 512 or more is good
 2. Not so much worker per `engine` instance (2-8 should be enough)
@@ -85,7 +85,7 @@ For example, if an `engine` instance has a batch size of 128, 4 workers, full ba
 
 ## Notes for benchmarks
 
-We use 1 message per `Submit()` for the normal usage to mimic the outermost services, which need to combine many small messages. The `SubmitMany()` benchmarks use a batch of 256 to mimic upstream services, which can receive batches from outer services, instead of one by one.
+We use 1 message per `Submit()` for the normal usage to mimic the outermost services, which need to combine many small messages. The `SubmitMany()` benchmarks use a batch of 256 to mimic upstream services/databases, which can receive batches from outer services, instead of one by one.
 
 ## Nice to have
 
