@@ -51,7 +51,8 @@ go get -u github.com/aarondwi/together
 ## Usages
 
 To use this library, see the [engine](https://github.com/aarondwi/together/blob/main/engine/engine_test.go), [cluster](https://github.com/aarondwi/together/blob/main/cluster/cluster_test.go), and [combiner](https://github.com/aarondwi/together/blob/main/combiner/combiner_test.go) test files directly for the most up-to-date example.
-For how to write typical business logic as batch, please see [here](https://github.com/aarondwi/batch-logic-example)
+
+For example how to write typical business logic as batch, please see [here](https://github.com/aarondwi/batch-logic-example), and those you should know and be careful of when designing batch logics, see [here](https://aarondwi.github.io/TogetherNotes)
 
 ## Notes
 
@@ -67,12 +68,6 @@ Other complex implementations have their own downsides, such as:
 4. This library will never include `panic` handling, because IMO, it is a bad practice. `panic` should only be used when keep going is dangerous for integrity, and the best solution is to just **crash**.
 If you (or a library you are using) still insist to use `panic`, please `recover` it and return error instead.
 5. For now, there are no plans to support dynamic, adaptive setup (a la [Netflix adaptive concurrency limit](https://netflixtechblog.medium.com/performance-under-load-3e6fa9a60581)). Besides cause this library gonna need more tuning (number of worker, batch size, waiting size, how to handle savings, etc) which makes it really really complex, together's Batch Buffering already absorbs most of the contention from requests, and upstream services easily become CPU bottlenecked. Adaptivity just gonna make CPU not operating at maximum available capacity.
-
-## On incorporating / using
-
-1. Start with simpler pattern, such as those with key-value access only. This typically constitute large number of requests, and very simple to batch (akin to `SELECT * FROM a_table_name WHERE some_field IN (...)`, or redis pipelines, memcache's multi_get).
-2. Prefer pessimistic rather than optimistic concurrency control, so you can control how complex your logic should be without rollbacking everything.
-3. Reduce allocations, as this is another source of non-useful work. See [here](https://github.com/aarondwi/notes/blob/main/WebAppsAlloc.md). CPU for allocations are better used for Together's logic
 
 ## Setup Recommendations
 
@@ -91,3 +86,6 @@ We use 1 message per `Submit()` for the normal usage to mimic the outermost serv
 
 1. Support for generic, once golang supports it. (How to adapt combiner's semantic though?)
 2. Workerpool to have rate-limited, max new goroutine per second, so not fire-and-forget goroutines only, but amortized to a number of works
+3. Reject too many values in batch
+4. Move to soft and hard limit, instead of single soft limit
+5. `panic` on insensible state (if any) (on constructor?)
