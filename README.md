@@ -7,9 +7,11 @@ Runs your business logic **together**, enjoy the performance.
 ## Background
 
 OLTP code has distinctive pattern from others, which is large number of small, simple requests.
-Each of these requests are generally very cheap, but needs lots of networking (usually to DB or other upstream APIs).
+Each of these requests are generally very cheap, but needs lots of overhead (usually networking cost to DB or other upstream APIs).
 Calling these upstreams for every single request means paying everything multiple times (from contention, network latency, etc).
 This means CPU and time are used more on the expensive stuff, instead of the more important business logic stuff.
+
+Async patterns emerged to solve efficiency issue from older, thread-based pattern. But while they indeed saves on resources, they don't directly translate to better utilization. Biggest reasons for this are traditional protocol (the most famous one being HTTP and/or Postgres/MySQL protocol) are blocking protocols, so the asynchronous-ism just happen inside the instance, while all the expensive network-related stuff still done synchronously. Async runtimes also don't promote enough back-pressure and/or cancellation needed (see [here](https://lucumr.pocoo.org/2020/1/1/async-pressure/) for good contexts, and [its HN thread](https://news.ycombinator.com/item?id=21927427)), so actually they just make bottlenecks on DB/other upstreams happen faster than before.
 
 Human themselves usually can't spot the difference between 5ms and 10, 50, 100, or even 200ms.
 So the option to combine interactive, OLTP-style requests to achieve more throughtput is interesting,
@@ -44,7 +46,7 @@ go get -u github.com/aarondwi/together
 5. Circumvent single lock contention using `Cluster` implementation.
 6. Optional background worker, so no goroutine creations on hot path (using tunable `WorkerPool`).
 7. Waiting multiple results at once, to reduce latency (Using `Combiner` implementation).
-8. Non-context and context variant available. (for timeout-based, hedge-requests, etc)
+8. Non-context and context variant available. (for timeout-based, cancellations, hedge-requests, etc)
 9. Separating submitting and waiting results, to allow fire-and-forget cases.
 10. Submit `Many` idiom, to directly put bunch of params with single lock. Useful especially for upstream services.
 
