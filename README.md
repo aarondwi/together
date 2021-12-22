@@ -13,9 +13,8 @@ This means CPU and time are used more on the expensive stuff, instead of the mor
 
 Async patterns emerged to solve efficiency issue from older, thread-based pattern. But while they indeed saves on resources, they don't directly translate to better utilization. Biggest reasons for this are traditional protocol (the most famous one being HTTP and/or Postgres/MySQL protocol) are blocking protocols, so the asynchronous-ism just happen inside the instance, while all the expensive network-related stuff still done synchronously. Async runtimes also don't promote enough back-pressure and/or cancellation needed (see [here](https://lucumr.pocoo.org/2020/1/1/async-pressure/) for good contexts, and [its HN thread](https://news.ycombinator.com/item?id=21927427)), so actually they just make bottlenecks on DB/other upstreams happen faster than before.
 
-Human themselves usually can't spot the difference between 5ms and 10, 50, 100, or even 200ms.
-So the option to combine interactive, OLTP-style requests to achieve more throughtput is interesting,
-and most data store (database, queue, 3rd party API, etc) already have batching capability (such as `group commit`, `insert multiple`, `update join`, `select in`, and their equivalents). This also basically changes I/O-heavy to CPU-heavy stuff, which is far easier to optimize.
+Human themselves usually can't spot the difference between 5ms and 10, 50, 100, or even 200ms. So the option to trade bit of latencies for throughput is worth it.
+Most data store (database, queue, 3rd party API, etc) already have batching capability (such as `group commit`, `insert multiple`, `update join`, `select in`, and their equivalents). This also basically changes I/O-heavy to CPU-heavy stuff, which is far easier to optimize.
 
 Unfortunately, most business-logic code (READ: `almost all`) does not use this technique. There are some,
 but only done per request basis, usually when the request has lots of data to insert/fetch at once.
@@ -29,7 +28,7 @@ connection is held for relatively long time, causing latencies to add up from wa
 There is a prominent user of batching in OLTP scheme, that is, [GraphQL](graphql.org) with its [Dataloader](https://github.com/graphql/dataloader) pattern.
 They can do it because each graphql request is basically a graph/tree request, meaning lots of data is ready to be queried at once. But it is still done on per request basis, which also means the previous 2 points still hold.
 
-This library is an attempt to make it easier to combine separate individual requests, helping developers easily achieve high throughput plus backpressure ability to handle sudden surge.
+This library is an attempt to make it easier to combine separate individual requests, helping developers easily achieve high throughput plus effectively free backpressure ability to handle sudden surge.
 
 ## Installation
 
@@ -91,3 +90,4 @@ We use 1 message per `Submit()` for the normal usage to mimic the outermost serv
 3. Reject too many values in batch
 4. Move to soft and hard limit, instead of single soft limit
 5. `panic` on insensible state (if any) (on constructor?)
+6. Cancellations for task inside a batch(?)
