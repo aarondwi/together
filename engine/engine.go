@@ -119,11 +119,13 @@ func (e *Engine) readyToWork() {
 	e.currentBatch = nil
 }
 
-// this implementation may skip some id to check
-// but that means the `Submit()` call is much faster
-// than the wait.
-//
+// This implementation may skip some id to check
+// but that means the `Submit()` call is much faster than the wait.
 // In that case, no need to wait for those batches.
+//
+// We do not need to precisely wait this
+// as we are `Wait`-ing on the condition variable, which should be precise enough for this use case.
+// The diff with the precise checking should only be on low single digit ms.
 func (e *Engine) timeoutWatchdog() {
 	var IDToTrack uint64
 	for {

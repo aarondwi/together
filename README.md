@@ -77,7 +77,7 @@ If you (or a library you are using) still insist to use `panic`, please `recover
 3. Waiting number to be at most the same as typical duration of a batch (if a full batch needs ~20ms, 10-20ms batch waiting time is good, getting good enough balance between latency, throughput, contention reduction via buffering, and call savings)
 4. Separate `engine` and `cluster` instance for each needs (For example, placing order and getting item details are very different requests, with very different complexity and duration of requests). But, use same `Workerpool` instance (with quite large number of goroutines, e.g. >5-10K) to amortize all the waiting goroutines
 
-For example, if an `engine` instance has a batch size of 128, 4 workers, full batch work time ~10ms (this is a rather slow one for batched key-value access, but make sense for more complex business logic), and assuming those batches keep filled cause of spike traffic, this engine instance can do `4 workers * 128/batch * (1 second / 10 ms)` = 51200 rps, which far surpass most businesses' needs.
+For example, if an `engine` instance has a batch size of 128, 4 workers, full batch work time ~10ms (this is a rather slow one for batched key-value access, but make sense for more complex business logic), and assuming those batches keep filled cause of spike traffic, this engine instance can do `4 workers * 128/batch * (1 second / 10 ms)` = 51200 rps, which already far surpass most businesses' needs.
 
 ## Notes for benchmarks
 
@@ -86,8 +86,6 @@ We use 1 message per `Submit()` for the normal usage to mimic the outermost serv
 ## Nice to have
 
 1. Support for generic, once golang supports it. (How to adapt combiner's semantic though?)
-2. Workerpool to have rate-limited, max new goroutine per second, so not fire-and-forget goroutines only, but amortized to a number of works
-3. Reject too many values in batch
-4. Move to soft and hard limit, instead of single soft limit
-5. `panic` on insensible state (if any) (on constructor?)
-6. Cancellations for task inside a batch(?)
+2. Workerpool to have rate-limited, max new goroutine per second and global max, so not fire-and-forget goroutines only, but amortized to a number of works
+3. Reject too many values in batch, by moving to soft and hard limit, instead of single soft limit
+4. Cancellations for batch(?)
