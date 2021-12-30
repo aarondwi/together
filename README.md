@@ -1,6 +1,6 @@
 # together
 
-Runs your business logic **together**, enjoy the performance.
+Batch your call. Easily backpressure. Enjoy the performance.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -22,7 +22,7 @@ It has 2 implications:
 
 1. Number of transactions to handle is equal to the number of requests from users, which means it is hard
 to handle sudden surge, something easy to do with batching.
-2. While network indeed is getting faster, because of transaction and locking (for data integrity)
+2. While network hardware indeed is getting faster (albeit slowly), because of transaction and locking (for data integrity)
 connection is held for relatively long time, causing latencies to add up from waiting, context-switches, etc. And that results in lower throughput than what is possible.
 
 There is a prominent user of batching in OLTP scheme, that is, [GraphQL](graphql.org) with its [Dataloader](https://github.com/graphql/dataloader) pattern.
@@ -60,19 +60,22 @@ For example how to write typical business logic as batch, please see [here](http
 1. This is **NOT** a batch processor like [spring batch](https://spring.io/projects/spring-batch), [dbt](https://www.getdbt.com/), [spark](https://spark.apache.org/), or anything like that. `This library does combining/deduplicating/scatter-gather multiple request into (preferably) single request to backend, like how Facebook manages its [memcache's flow](https://www.mimuw.edu.pl/~iwanicki/courses/ds/2016/presentations/08_Pawlowska.pdf) or Quora with their [asynq](https://github.com/quora/asynq).
 2. This is designed to be used in high level, business OLTP code, so it is not aiming to be *every-last-cpu-cycle* optimized (in particular, this implementation use `interface{}`, which is yet another pointer + allocation, until golang support generics).
 If you have something that can be solved with this pattern, but need a more optimized one, it is recommended to make something similar yourself.
-3. The batching implementation waits on either number of message, or timeout (akin to [kafka](https://kafka.apache.org/)'s `batch.size` and `linger.ms`).
-This is by design, because we either want to batch for throughput, or for saving (if you call 3rd party APIs
-which has rate-limiter/pay-per-call, but allow multiple message in each call).
-Other complex implementations have their own downsides, such as:
+3. The batching implementation waits on either number of message (soft and hard limit) and timeout (akin to [kafka](https://kafka.apache.org/)'s `batch.size` and `linger.ms`), combined with [Smart Batching](http://mechanical-sympathy.blogspot.com/2011/10/smart-batching.html), to ensure we get the largest batch allowed.
+This is by design, because we either want to batch for throughput or for saving (if you call 3rd party APIs
+which has rate-limiter/pay-per-call, but allow multiple message in each call), but some API still have a hard limit on how many messages a single call can contain.
+Other implementations have their own downsides, such as:
     * waiting only if more than specific number of connection, like in [PostgreSQL](https://postgresqlco.nf/doc/en/param/commit_siblings/), gonna make the API harder (and weird) to be incorporated into business-level code.
-    * getting from the queue and working the batch as fast as possible (basically [Smart Batching](http://mechanical-sympathy.blogspot.com/2011/10/smart-batching.html)), like in [Tarantool](https://dzone.com/articles/asynchronous-processing-with-in-memory-databases-o) or [Aurora](https://www.semanticscholar.org/paper/Amazon-Aurora%3A-On-Avoiding-Distributed-Consensus-Verbitski-Gupta/fa4a2b8ab110472c6d8b1b19baa81af21800468b), may results in better throughput and/or latency overall, but not as useful for the saving goal. In OLTP setup, where typical user entire end-to-end latency is >=200ms, waiting ~5-10ms for a batch is not a problem at all.
+    * Naive smart batching, like in [Tarantool](https://dzone.com/articles/asynchronous-processing-with-in-memory-databases-o) or [Aurora](https://www.semanticscholar.org/paper/Amazon-Aurora%3A-On-Avoiding-Distributed-Consensus-Verbitski-Gupta/fa4a2b8ab110472c6d8b1b19baa81af21800468b), may results in better throughput and/or latency and/or utilization overall, but not as useful for the saving goal.
 4. This library will never include `panic` handling, because IMO, it is a bad practice. `panic` should only be used when keep going is dangerous for integrity, and the best solution is to just **crash**.
 If you (or a library you are using) still insist to use `panic`, please `recover` it and return error instead.
-5. For now, there are no plans to support dynamic, adaptive setup (a la [Netflix adaptive concurrency limit](https://netflixtechblog.medium.com/performance-under-load-3e6fa9a60581)). Besides cause this library gonna need more tuning (number of worker, batch size, waiting size, how to handle savings, etc) which makes it really really complex, together's Batch Buffering already absorbs most of the contention from requests, and upstream services easily become CPU bottlenecked. Adaptivity just gonna make CPU not operating at maximum available capacity.
+5. A batch here is **NOT**, and should never be considered as, a unit of `atomicity` (A in ACID). The goal is to let lots of data to be processed at once, increasing efficiency, but each content should be able to succeed or fail individually.
+6. For now, there are no plans to support dynamic, adaptive setup (a la [Netflix adaptive concurrency limit](https://netflixtechblog.medium.com/performance-under-load-3e6fa9a60581)).
+Besides cause this library gonna need more tuning (number of worker, batch size, waiting size, how to handle savings, etc) which makes it really really complex, together's Batch Buffering already absorbs most of the contention from requests, and upstream services easily become CPU bottlenecked. Adaptivity just gonna make CPU not operating at maximum available capacity.
+Instead, allow the batch to be a bit bigger. This will already allow you to serve most requests even on heavy surge instead of a downtime
 
 ## Setup Recommendations
 
-1. For business logic setup, set normal large batch (~64-128 is good). For lots key-value access from a single requests, 256, 512 or more is good
+1. For business logic setup, set normal large batch (~64-128 is good). For lots key-value access from a single requests, 256, 512 or more is good. The large number is more useful for backpressure purpose, and while bigger batch may have higher latency overall, it is better to still serve all with higher latency (of course, while still under acceptable human perception, e.g. 1-2s) than just straight downtime.
 2. Not so much worker per `engine` instance (2-8 should be enough)
 3. Waiting number to be at most the same as typical duration of a batch (if a full batch needs ~20ms, 10-20ms batch waiting time is good, getting good enough balance between latency, throughput, contention reduction via buffering, and call savings)
 4. Separate `engine` and `cluster` instance for each needs (For example, placing order and getting item details are very different requests, with very different complexity and duration of requests). But, use same `Workerpool` instance (with quite large number of goroutines, e.g. >5-10K) to amortize all the waiting goroutines
@@ -87,5 +90,6 @@ We use 1 message per `Submit()` for the normal usage to mimic the outermost serv
 
 1. Support for generic, once golang supports it. (How to adapt combiner's semantic though?)
 2. Workerpool to have rate-limited, max new goroutine per second and global max, so not fire-and-forget goroutines only, but amortized to a number of works
-3. Reject too many values in batch, by moving to soft and hard limit, instead of single soft limit
-4. Cancellations for batch(?)
+3. Cancellations for batch(?)
+4. Actually implementing adaptivity, but only after knowing how much adaptivity should be designed, what the algorithm gonna be, and for what case.
+5. Key-value based batch, as key-value use case is the most probable to be in need of high throughput

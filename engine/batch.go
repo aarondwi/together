@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"sync"
+	"time"
 
 	WP "github.com/aarondwi/together/workerpool"
 )
@@ -16,13 +17,14 @@ import (
 // Batch object itself has no context variant
 // as we can't know which context it should be based on
 type Batch struct {
-	ID      uint64
-	args    map[uint64]interface{}
-	argSize int
-	wg      sync.WaitGroup
-	results map[uint64]interface{}
-	err     error
-	wp      *WP.WorkerPool
+	ID        uint64
+	args      map[uint64]interface{}
+	argSize   int
+	wg        sync.WaitGroup
+	results   map[uint64]interface{}
+	err       error
+	wp        *WP.WorkerPool
+	createdAt time.Time
 }
 
 type BatchResult struct {
@@ -40,9 +42,10 @@ var (
 // Once taken to work on, nothing should be put anymore
 func NewBatch(id uint64, wp *WP.WorkerPool) *Batch {
 	b := &Batch{
-		ID:   id,
-		args: make(map[uint64]interface{}),
-		wp:   wp,
+		ID:        id,
+		args:      make(map[uint64]interface{}),
+		wp:        wp,
+		createdAt: time.Now(),
 	}
 	b.wg.Add(1)
 	return b

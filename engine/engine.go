@@ -8,10 +8,11 @@ import (
 	WP "github.com/aarondwi/together/workerpool"
 )
 
-// ErrArgSizeLimitLessThanEqualOne is returned
-// when given argSizeLimit <= 1
-var ErrArgSizeLimitLessThanEqualOne = errors.New(
-	"argSizeLimit is expected to be > 1")
+// ErrEngineBrokenSizes is returned when the soft/hard limit is relatively broken
+//
+// Please check EngineConfig docs for more
+var ErrEngineBrokenSizes = errors.New(
+	"Please check EngineConfig docs, and ensure your config match the requirements")
 
 // ErrResultNotFound is returned
 // when an ID is not found in the results map
@@ -21,6 +22,10 @@ var ErrResultNotFound = errors.New(
 
 // ErrNilWorkerFn is returned when`workerFn` is nil
 var ErrNilWorkerFn = errors.New("workerFn can't be nil")
+
+// ErrArgsBiggerThanHardLimit is returned when the number of given args is bigger than hard limit
+var ErrArgsBiggerThanHardLimit = errors.New(
+	"number of args passed is bigger than the given hard limit")
 
 type WorkerFn func(map[uint64]interface{}) (map[uint64]interface{}, error)
 
@@ -39,22 +44,37 @@ type WorkerFn func(map[uint64]interface{}) (map[uint64]interface{}, error)
 type Engine struct {
 	mu           *sync.Mutex
 	newBatch     *sync.Cond
+	batchReady   *sync.Cond
 	batchID      uint64
 	taskID       uint64
 	fn           WorkerFn
-	batchChan    chan *Batch
+	batchChan    chan *Batch // this is only used as a bounded queue, not for concurrency control
+	batchWaiting int
 	currentBatch *Batch
-	argSizeLimit int
+	softLimit    int
+	hardLimit    int
 	waitDuration time.Duration
 	wp           *WP.WorkerPool
 }
 
 // EngineConfig is the config object for our engine
 //
-// Note that ArgSizeLimit is only a soft limit.
+// SoftLimit is the limit where the batch can already be taken by worker,
+// but not forcefully sent to. Worker gonna take this by itself after a timeout
+// (triggered by timeoutWatchdog)
+//
+// While HardLimit is which can't be passed. Useful for example like AWS SQS,
+// which a single call can only have at most 100 messages
+//
+// If SoftLimit is empty, it is set to HardLimit / 2.
+//
+// If HardLimit is empty, it is set to SoftLimit * 2.
+//
+// After those conversion, both should still be bigger than 1, and SoftLimit <= HardLimit
 type EngineConfig struct {
 	NumOfWorker  int
-	ArgSizeLimit int
+	SoftLimit    int
+	HardLimit    int
 	WaitDuration time.Duration
 }
 
@@ -68,22 +88,40 @@ func NewEngine(
 	if ec.NumOfWorker <= 0 {
 		return nil, WP.ErrNumberOfWorkerLessThanEqualZero
 	}
-	if ec.ArgSizeLimit <= 1 {
-		return nil, ErrArgSizeLimitLessThanEqualOne
-	}
 	if fn == nil {
 		return nil, ErrNilWorkerFn
 	}
+
+	// only change if not set
+	var softLimit, hardLimit int
+	if ec.SoftLimit == 0 {
+		hardLimit = ec.HardLimit
+		softLimit = ec.HardLimit / 2
+	} else if ec.HardLimit == 0 {
+		softLimit = ec.SoftLimit
+		hardLimit = ec.SoftLimit * 2
+	} else {
+		softLimit = ec.SoftLimit
+		hardLimit = ec.HardLimit
+	}
+
+	if (softLimit > hardLimit) || (softLimit <= 1) || (hardLimit <= 1) {
+		return nil, ErrEngineBrokenSizes
+	}
+
 	mu := &sync.Mutex{}
 	newBatch := sync.NewCond(mu)
+	batchReady := sync.NewCond(mu)
 	e := &Engine{
-		mu:       mu,
-		newBatch: newBatch,
-		fn:       fn,
-
-		// we allow one buffer for each worker
-		batchChan:    make(chan *Batch, ec.NumOfWorker),
-		argSizeLimit: ec.ArgSizeLimit,
+		mu:         mu,
+		newBatch:   newBatch,
+		batchReady: batchReady,
+		fn:         fn,
+		// reserve 4 times the number of worker
+		// so batch can pile up a bit
+		batchChan:    make(chan *Batch, 4*ec.NumOfWorker),
+		softLimit:    softLimit,
+		hardLimit:    hardLimit,
 		waitDuration: ec.WaitDuration,
 		wp:           wp,
 	}
@@ -96,7 +134,19 @@ func NewEngine(
 
 func (e *Engine) worker() {
 	for {
+		e.mu.Lock()
+		for (e.currentBatch == nil ||
+			(e.currentBatch.argSize < e.softLimit && time.Since(e.currentBatch.createdAt) < e.waitDuration)) &&
+			e.batchWaiting == 0 {
+			e.batchReady.Wait()
+		}
+		if e.batchWaiting == 0 { // a new batch has passed softLimit
+			e.readyToWork()
+		}
 		b := <-e.batchChan
+		e.batchWaiting--
+		e.mu.Unlock()
+
 		m, err := e.fn(b.args)
 		b.results = m
 		b.err = err
@@ -116,6 +166,7 @@ func (e *Engine) worker() {
 // This is a conscious decision, to not balloon the memory requirement, at least for now.
 func (e *Engine) readyToWork() {
 	e.batchChan <- e.currentBatch
+	e.batchWaiting++
 	e.currentBatch = nil
 }
 
@@ -141,7 +192,7 @@ func (e *Engine) timeoutWatchdog() {
 		e.mu.Lock()
 		if e.currentBatch != nil &&
 			e.currentBatch.ID == IDToTrack {
-			e.readyToWork()
+			e.batchReady.Signal()
 		}
 		e.mu.Unlock()
 	}
@@ -157,9 +208,9 @@ func (e *Engine) ensureBatch() {
 }
 
 // This function should only be called when holding the mutex
-func (e *Engine) checkReadiness() {
-	if e.currentBatch.argSize >= e.argSizeLimit {
-		e.readyToWork()
+func (e *Engine) checkSoftLimitReadiness() {
+	if e.currentBatch.argSize >= e.softLimit {
+		e.batchReady.Signal()
 	}
 }
 
@@ -167,53 +218,66 @@ func (e *Engine) checkReadiness() {
 func (e *Engine) Submit(arg interface{}) BatchResult {
 	e.mu.Lock()
 	e.ensureBatch()
+	if e.currentBatch.argSize >= e.hardLimit { // cause only gonna increase by 1
+		e.readyToWork()
+		e.batchReady.Signal()
+		e.ensureBatch()
+	}
 
 	e.taskID++
 	br := e.currentBatch.Put(e.taskID, arg)
 
-	e.checkReadiness()
+	e.checkSoftLimitReadiness()
 	e.mu.Unlock()
 
 	return br
 }
 
-// SubmitMany puts bunch of args into current batch.
+// SubmitMany puts args into batches, which may be one or more
 //
-// It would allocate a slice on hot path to accomodate the result
+// Atomicity should not be assumed, as this implementation will try to pack as much as possible
+// to ensure we get the best possible savings + efficiency.
+//
+// It would allocate a slice to accomodate the result, and internally call `SubmitManyInto`
 func (e *Engine) SubmitMany(args []interface{}) []BatchResult {
-	// create slices outside of mutex, reduce holding time (even only ns)
 	result := make([]BatchResult, 0, len(args))
-
-	e.mu.Lock()
-	e.ensureBatch()
-
-	for _, arg := range args {
-		e.taskID++
-		br := e.currentBatch.Put(e.taskID, arg)
-		result = append(result, br)
-	}
-
-	e.checkReadiness()
-	e.mu.Unlock()
-
+	e.SubmitManyInto(args, &result)
 	return result
 }
 
-// SubmitManyInto puts args to current batch, and store BatchResult into result
+// SubmitManyInto puts args into batches, which may be one or more, and store them into result
+//
+// Atomicity should not be assumed, as this implementation will try to pack as much as possible
+// to ensure we get the best possible savings + efficiency.
 //
 // Mainly used to control result's slice allocation
 //
-// Note that the result will be appended to, so will (and can) be re-allocated for more spaces
+// Note that the result will be appended to, so can (and will) be re-allocated for more spaces
 func (e *Engine) SubmitManyInto(args []interface{}, result *[]BatchResult) {
+	l := len(args)
 	e.mu.Lock()
-	e.ensureBatch()
+	for l > 0 {
+		e.ensureBatch()
+		numArgsTaken := l
+		emptySlots := e.hardLimit - e.currentBatch.argSize
+		if emptySlots < numArgsTaken {
+			numArgsTaken = emptySlots
+		}
 
-	for _, arg := range args {
-		e.taskID++
-		br := e.currentBatch.Put(e.taskID, arg)
-		*result = append(*result, br)
+		startPos := len(args) - l
+		for _, arg := range args[startPos : startPos+numArgsTaken] {
+			e.taskID++
+			br := e.currentBatch.Put(e.taskID, arg)
+			*result = append(*result, br)
+		}
+
+		if e.currentBatch.argSize >= e.hardLimit {
+			e.readyToWork()
+			e.batchReady.Signal()
+		} else {
+			e.checkSoftLimitReadiness()
+		}
+		l -= numArgsTaken
 	}
-
-	e.checkReadiness()
 	e.mu.Unlock()
 }

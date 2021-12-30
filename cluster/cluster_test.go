@@ -15,7 +15,7 @@ func TestClusterValidation(t *testing.T) {
 		1, nil,
 		e.EngineConfig{
 			NumOfWorker:  2,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(time.Second)},
 		nil, wp)
 	if err == nil || err != ErrPartitionNumberTooLow {
@@ -26,7 +26,7 @@ func TestClusterValidation(t *testing.T) {
 		2, nil,
 		e.EngineConfig{
 			NumOfWorker:  2,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(time.Second)},
 		nil, wp)
 	if err == nil || err != e.ErrNilWorkerFn {
@@ -39,7 +39,7 @@ func TestClusterSubmitNilPartitionerFn(t *testing.T) {
 		2, nil,
 		e.EngineConfig{
 			NumOfWorker:  2,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(time.Second)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -62,7 +62,7 @@ func TestClusterSubmitOutsideRange(t *testing.T) {
 		},
 		e.EngineConfig{
 			NumOfWorker:  2,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(time.Second)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -90,7 +90,7 @@ func TestClusterSubmit(t *testing.T) {
 		},
 		e.EngineConfig{
 			NumOfWorker:  2,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -132,7 +132,7 @@ func TestClusterSubmitMany(t *testing.T) {
 		},
 		e.EngineConfig{
 			NumOfWorker:  2,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -162,54 +162,12 @@ func TestClusterSubmitMany(t *testing.T) {
 	}
 }
 
-func TestClusterSubmitManyToPartition(t *testing.T) {
-	c, err := NewCluster(
-		2, func(arg interface{}) int {
-			return rand.Intn(1)
-		},
-		e.EngineConfig{
-			NumOfWorker:  2,
-			ArgSizeLimit: 10,
-			WaitDuration: time.Duration(5 * time.Millisecond)},
-		func(m map[uint64]interface{}) (
-			map[uint64]interface{}, error) {
-			return m, nil
-		}, nil)
-	if err != nil {
-		t.Fatalf("Should not fail, but we got %v", err)
-	}
-
-	requests := make([]interface{}, 0, 64)
-	for i := 0; i < 64; i++ {
-		requests = append(requests, i)
-	}
-	brs, err := c.SubmitManyToPartition(1, requests)
-	if err != nil {
-		t.Fatalf("Should not error, but instead we got %v", err)
-	}
-
-	for i, br := range brs {
-		r, err := br.GetResult()
-		if err != nil {
-			t.Fatalf("Should have no error here, but instead we got %v", err)
-		}
-		if i != r.(int) {
-			t.Fatalf("Should be the same, but instead we got %d and %d", i, r.(int))
-		}
-	}
-
-	_, err = c.SubmitManyToPartition(2, requests)
-	if err == nil || err != ErrPartitionNumOutOfRange {
-		t.Fatal("Should error because out of range, but it is not")
-	}
-}
-
 func TestClusterSubmitManyNilPartitioner(t *testing.T) {
 	c, err := NewCluster(
 		2, nil,
 		e.EngineConfig{
 			NumOfWorker:  2,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {

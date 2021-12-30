@@ -77,7 +77,7 @@ func NewCluster(
 		e, err := e.NewEngine(
 			e.EngineConfig{
 				NumOfWorker:  ec.NumOfWorker,
-				ArgSizeLimit: ec.ArgSizeLimit,
+				SoftLimit:    ec.SoftLimit,
 				WaitDuration: ec.WaitDuration},
 			fn, wp)
 		if err != nil {

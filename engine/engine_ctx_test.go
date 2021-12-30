@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -13,16 +14,16 @@ import (
 func TestEngineWithCtx(t *testing.T) {
 	var wp, _ = WP.NewWorkerPool(4, 10, false)
 	valShouldFail := 18
-	globalCount := 0
+	var globalCount uint32
 	e, err := NewEngine(
-		EngineConfig{1, 10, time.Duration(5 * time.Millisecond)},
+		EngineConfig{1, 10, 20, time.Duration(5 * time.Millisecond)},
 		// notes that in real usage
 		// usually you won't just doing in-memory operation
 		// but rather, doing a network call
 		// and network call is much more expensive than just locking + memory ops
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
-			globalCount++
+			atomic.AddUint32(&globalCount, 1)
 			res := make(map[uint64]interface{})
 			for k, v := range m {
 				if v.(int) != valShouldFail {
@@ -61,8 +62,10 @@ func TestEngineWithCtx(t *testing.T) {
 		}(i)
 	}
 	wg.Wait()
-	if globalCount != 3 {
-		t.Fatalf("batch should be called 3 times, but we got %d", globalCount)
+	// depends when workers took from batch
+	val := atomic.LoadUint32(&globalCount)
+	if !(val == 2 || val == 3) {
+		t.Fatalf("batch should be called 2 or 3 times, depending on worker timing, but we got %d", atomic.LoadUint32(&globalCount))
 	}
 }
 
@@ -78,7 +81,7 @@ func TestEngineCtxReturnsError(t *testing.T) {
 	var wp, _ = WP.NewWorkerPool(4, 10, false)
 	ErrTest := errors.New("")
 	e, err := NewEngine(
-		EngineConfig{1, 10, time.Duration(1 * time.Millisecond)},
+		EngineConfig{1, 10, 20, time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			// gives us time to cancel the ctx first

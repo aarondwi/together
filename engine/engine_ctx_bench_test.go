@@ -9,7 +9,7 @@ import (
 func BenchmarkEngineWithCtx_Parallel256(b *testing.B) {
 	once.Do(initEngineWP)
 	e, err := NewEngine(
-		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
+		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, NUM_OF_ARGS_TO_WAIT * 2, SLEEP_DURATION},
 		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
@@ -34,7 +34,7 @@ func BenchmarkEngineWithCtx_Parallel256(b *testing.B) {
 func BenchmarkEngineWithCtx_Parallel1024(b *testing.B) {
 	once.Do(initEngineWP)
 	e, err := NewEngine(
-		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
+		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, NUM_OF_ARGS_TO_WAIT * 2, SLEEP_DURATION},
 		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
@@ -59,7 +59,7 @@ func BenchmarkEngineWithCtx_Parallel1024(b *testing.B) {
 func BenchmarkEngineWithCtx_Parallel4096(b *testing.B) {
 	once.Do(initEngineWP)
 	e, err := NewEngine(
-		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
+		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, NUM_OF_ARGS_TO_WAIT * 2, SLEEP_DURATION},
 		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)

@@ -19,7 +19,7 @@ func initEngineWP() {
 func BenchmarkEngine_Parallel256(b *testing.B) {
 	once.Do(initEngineWP)
 	e, err := NewEngine(
-		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
+		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, NUM_OF_ARGS_TO_WAIT * 2, SLEEP_DURATION},
 		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
@@ -44,7 +44,7 @@ func BenchmarkEngine_Parallel256(b *testing.B) {
 func BenchmarkEngine_Parallel1024(b *testing.B) {
 	once.Do(initEngineWP)
 	e, err := NewEngine(
-		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
+		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, NUM_OF_ARGS_TO_WAIT * 2, SLEEP_DURATION},
 		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
@@ -69,7 +69,7 @@ func BenchmarkEngine_Parallel1024(b *testing.B) {
 func BenchmarkEngine_Parallel4096(b *testing.B) {
 	once.Do(initEngineWP)
 	e, err := NewEngine(
-		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
+		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, NUM_OF_ARGS_TO_WAIT * 2, SLEEP_DURATION},
 		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
@@ -94,7 +94,7 @@ func BenchmarkEngine_Parallel4096(b *testing.B) {
 func BenchmarkEngineSubmitMany(b *testing.B) {
 	once.Do(initEngineWP)
 	e, err := NewEngine(
-		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
+		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, NUM_OF_ARGS_TO_WAIT * 2, SLEEP_DURATION},
 		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
@@ -131,7 +131,7 @@ func BenchmarkEngineSubmitMany(b *testing.B) {
 func BenchmarkEngineSubmitManyInto(b *testing.B) {
 	once.Do(initEngineWP)
 	e, err := NewEngine(
-		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
+		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, NUM_OF_ARGS_TO_WAIT * 2, SLEEP_DURATION},
 		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
@@ -170,7 +170,7 @@ func BenchmarkEngineSubmitManyInto(b *testing.B) {
 func BenchmarkEngineSubmitMany_TwiceCoreNum(b *testing.B) {
 	once.Do(initEngineWP)
 	e, err := NewEngine(
-		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
+		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, NUM_OF_ARGS_TO_WAIT * 2, SLEEP_DURATION},
 		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
@@ -208,7 +208,7 @@ func BenchmarkEngineSubmitMany_TwiceCoreNum(b *testing.B) {
 func BenchmarkEngineSubmitManyInto_TwiceCoreNum(b *testing.B) {
 	once.Do(initEngineWP)
 	e, err := NewEngine(
-		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
+		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, NUM_OF_ARGS_TO_WAIT * 2, SLEEP_DURATION},
 		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
@@ -248,7 +248,7 @@ func BenchmarkEngineSubmitManyInto_TwiceCoreNum(b *testing.B) {
 func BenchmarkEngineSubmitMany_FourTimesCoreNum(b *testing.B) {
 	once.Do(initEngineWP)
 	e, err := NewEngine(
-		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
+		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, NUM_OF_ARGS_TO_WAIT * 2, SLEEP_DURATION},
 		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)
@@ -286,7 +286,7 @@ func BenchmarkEngineSubmitMany_FourTimesCoreNum(b *testing.B) {
 func BenchmarkEngineSubmitManyInto_FourTimesCoreNum(b *testing.B) {
 	once.Do(initEngineWP)
 	e, err := NewEngine(
-		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, SLEEP_DURATION},
+		EngineConfig{NUM_OF_WORKER, NUM_OF_ARGS_TO_WAIT, NUM_OF_ARGS_TO_WAIT * 2, SLEEP_DURATION},
 		BatchFunc, wpb)
 	if err != nil {
 		b.Fatal(err)

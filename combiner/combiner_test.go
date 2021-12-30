@@ -24,7 +24,7 @@ func TestAllSuccesses(t *testing.T) {
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -56,7 +56,7 @@ func TestAllSuccesses(t *testing.T) {
 	e2, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -82,7 +82,7 @@ func TestAllSuccessesNilWorkerPool(t *testing.T) {
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -114,7 +114,7 @@ func TestAllSuccessesNilWorkerPool(t *testing.T) {
 	e2, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -147,7 +147,7 @@ func TestAllSuccessesWithCtx(t *testing.T) {
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -179,7 +179,7 @@ func TestAllSuccessesWithCtx(t *testing.T) {
 	e2, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -212,7 +212,7 @@ func TestAllSuccessesWithCtxNilWorkerPool(t *testing.T) {
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -244,7 +244,7 @@ func TestAllSuccessesWithCtxNilWorkerPool(t *testing.T) {
 	e2, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -269,7 +269,7 @@ func TestRace(t *testing.T) {
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -283,7 +283,7 @@ func TestRace(t *testing.T) {
 	e2, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -292,7 +292,7 @@ func TestRace(t *testing.T) {
 	e3, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -308,7 +308,7 @@ func TestRace(t *testing.T) {
 	e4, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -349,7 +349,7 @@ func TestRaceNilWorkerPool(t *testing.T) {
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -363,7 +363,7 @@ func TestRaceNilWorkerPool(t *testing.T) {
 	e2, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -372,7 +372,7 @@ func TestRaceNilWorkerPool(t *testing.T) {
 	e3, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -388,7 +388,7 @@ func TestRaceNilWorkerPool(t *testing.T) {
 	e4, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -438,7 +438,7 @@ func TestRaceWithCtx(t *testing.T) {
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -452,7 +452,7 @@ func TestRaceWithCtx(t *testing.T) {
 	e2, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -461,7 +461,7 @@ func TestRaceWithCtx(t *testing.T) {
 	e3, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -477,7 +477,7 @@ func TestRaceWithCtx(t *testing.T) {
 	e4, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -529,7 +529,7 @@ func TestRaceWithCtxNilWorkerPool(t *testing.T) {
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -543,7 +543,7 @@ func TestRaceWithCtxNilWorkerPool(t *testing.T) {
 	e2, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -552,7 +552,7 @@ func TestRaceWithCtxNilWorkerPool(t *testing.T) {
 	e3, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(5 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -568,7 +568,7 @@ func TestRaceWithCtxNilWorkerPool(t *testing.T) {
 	e4, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -611,7 +611,7 @@ func TestEvery(t *testing.T) {
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(2 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -624,7 +624,7 @@ func TestEvery(t *testing.T) {
 	e2, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -661,7 +661,7 @@ func TestEveryNilWorkerPool(t *testing.T) {
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(2 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -674,7 +674,7 @@ func TestEveryNilWorkerPool(t *testing.T) {
 	e2, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -720,7 +720,7 @@ func TestEveryWithCtx(t *testing.T) {
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(2 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -733,7 +733,7 @@ func TestEveryWithCtx(t *testing.T) {
 	e2, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -779,7 +779,7 @@ func TestEveryWithCtxNilWorkerPool(t *testing.T) {
 	e1, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(2 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
@@ -792,7 +792,7 @@ func TestEveryWithCtxNilWorkerPool(t *testing.T) {
 	e2, _ := e.NewEngine(
 		e.EngineConfig{
 			NumOfWorker:  1,
-			ArgSizeLimit: 10,
+			SoftLimit:    10,
 			WaitDuration: time.Duration(1 * time.Millisecond)},
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
