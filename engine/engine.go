@@ -42,14 +42,19 @@ type WorkerFn func(map[uint64]interface{}) (map[uint64]interface{}, error)
 //
 // This implementation is goroutine-safe
 type Engine struct {
-	mu           *sync.Mutex
-	newBatch     *sync.Cond
-	batchReady   *sync.Cond
-	batchID      uint64
-	taskID       uint64
-	fn           WorkerFn
-	batchChan    chan *Batch // this is only used as a bounded queue, not for concurrency control
-	batchWaiting int
+	mu                  *sync.Mutex
+	newBatch            *sync.Cond
+	batchReady          *sync.Cond
+	batchSlotsAvailable *sync.Cond
+	batchID             uint64
+	taskID              uint64
+	fn                  WorkerFn
+	numOfWorker         int
+
+	// we move from channel, as it is bounded, can cause a deadlock when can't insert anymore to buffer
+	// we either need to back to before, which only track the time/softLimit, or going unbounded
+	batchChan    llBatch
+	batchWaiting int // we track number of batches in batchChan, so can apply custom backpressure
 	currentBatch *Batch
 	softLimit    int
 	hardLimit    int
@@ -112,20 +117,21 @@ func NewEngine(
 	mu := &sync.Mutex{}
 	newBatch := sync.NewCond(mu)
 	batchReady := sync.NewCond(mu)
+	batchSlotsAvailable := sync.NewCond(mu)
 	e := &Engine{
-		mu:         mu,
-		newBatch:   newBatch,
-		batchReady: batchReady,
-		fn:         fn,
-		// reserve 4 times the number of worker
-		// so batch can pile up a bit
-		batchChan:    make(chan *Batch, 4*ec.NumOfWorker),
-		softLimit:    softLimit,
-		hardLimit:    hardLimit,
-		waitDuration: ec.WaitDuration,
-		wp:           wp,
+		mu:                  mu,
+		newBatch:            newBatch,
+		batchReady:          batchReady,
+		batchSlotsAvailable: batchSlotsAvailable,
+		fn:                  fn,
+		batchChan:           llBatch{},
+		numOfWorker:         ec.NumOfWorker,
+		softLimit:           softLimit,
+		hardLimit:           hardLimit,
+		waitDuration:        ec.WaitDuration,
+		wp:                  wp,
 	}
-	for i := 0; i < ec.NumOfWorker; i++ {
+	for i := 0; i < e.numOfWorker; i++ {
 		go e.worker()
 	}
 	go e.timeoutWatchdog()
@@ -143,8 +149,14 @@ func (e *Engine) worker() {
 		if e.batchWaiting == 0 { // a new batch has passed softLimit
 			e.readyToWork()
 		}
-		b := <-e.batchChan
+		b := e.batchChan.get()
+		if b == nil {
+			panic("Shouldn't be nil after reaching here, `Wait` code must be broken")
+		}
 		e.batchWaiting--
+		if e.batchWaiting < e.numOfWorker {
+			e.batchSlotsAvailable.Broadcast()
+		}
 		e.mu.Unlock()
 
 		m, err := e.fn(b.args)
@@ -165,7 +177,7 @@ func (e *Engine) worker() {
 //
 // This is a conscious decision, to not balloon the memory requirement, at least for now.
 func (e *Engine) readyToWork() {
-	e.batchChan <- e.currentBatch
+	e.batchChan.add(e.currentBatch)
 	e.batchWaiting++
 	e.currentBatch = nil
 }
@@ -178,13 +190,12 @@ func (e *Engine) readyToWork() {
 // as we are `Wait`-ing on the condition variable, which should be precise enough for this use case.
 // The diff with the precise checking should only be on low single digit ms.
 func (e *Engine) timeoutWatchdog() {
-	var IDToTrack uint64
 	for {
 		e.mu.Lock()
 		for e.currentBatch == nil {
 			e.newBatch.Wait()
 		}
-		IDToTrack = e.currentBatch.ID
+		IDToTrack := e.currentBatch.ID
 		e.mu.Unlock()
 
 		time.Sleep(e.waitDuration)
@@ -207,6 +218,13 @@ func (e *Engine) ensureBatch() {
 	}
 }
 
+// this function should only be called while holding the mutex
+func (e *Engine) waitBatchSlotsAvailable() {
+	for e.batchWaiting > e.numOfWorker {
+		e.batchSlotsAvailable.Wait()
+	}
+}
+
 // This function should only be called when holding the mutex
 func (e *Engine) checkSoftLimitReadiness() {
 	if e.currentBatch.argSize >= e.softLimit {
@@ -217,6 +235,8 @@ func (e *Engine) checkSoftLimitReadiness() {
 // Submit puts arg to current batch to be worked on by background goroutine.
 func (e *Engine) Submit(arg interface{}) BatchResult {
 	e.mu.Lock()
+	e.waitBatchSlotsAvailable()
+
 	e.ensureBatch()
 	if e.currentBatch.argSize >= e.hardLimit { // cause only gonna increase by 1
 		e.readyToWork()
@@ -256,6 +276,7 @@ func (e *Engine) SubmitMany(args []interface{}) []BatchResult {
 func (e *Engine) SubmitManyInto(args []interface{}, result *[]BatchResult) {
 	l := len(args)
 	e.mu.Lock()
+	e.waitBatchSlotsAvailable()
 	for l > 0 {
 		e.ensureBatch()
 		numArgsTaken := l

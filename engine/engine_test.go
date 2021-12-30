@@ -146,15 +146,13 @@ func TestEngineValidation(t *testing.T) {
 	}
 }
 
-func TestEngineSubmitMany(t *testing.T) {
+func TestEngineSubmitManyPlusDeadlock(t *testing.T) {
+	// these tests are combined cause both test same behavior
+	// the deadlock case happen when the number of batch pass the number of channel buffer
 	errX := errors.New("errX is just a test error")
 	valShouldFail := 8
 	e, _ := NewEngine(
 		EngineConfig{1, 10, 20, time.Duration(5 * time.Millisecond)},
-		// notes that in real usage
-		// usually you won't just doing in-memory operation
-		// but rather, doing a network call
-		// and network call is much more expensive than just locking + memory ops
 		func(m map[uint64]interface{}) (
 			map[uint64]interface{}, error) {
 			res := make(map[uint64]interface{})
@@ -168,8 +166,8 @@ func TestEngineSubmitMany(t *testing.T) {
 			return res, nil
 		}, nil)
 
-	requests := make([]interface{}, 0, 12)
-	for i := 0; i < 12; i++ {
+	requests := make([]interface{}, 0, 100)
+	for i := 0; i < 100; i++ {
 		requests = append(requests, i)
 	}
 	result := e.SubmitMany(requests)
@@ -184,7 +182,7 @@ func TestEngineSubmitMany(t *testing.T) {
 	}
 }
 
-func TestEngineNoWorkerWaitHardLimit(t *testing.T) {
+func TestEngineNoWorkerAvailableWaitHardLimit(t *testing.T) {
 	var globalCount uint32
 	e, _ := NewEngine(
 		EngineConfig{1, 10, 20, time.Duration(5 * time.Millisecond)},
