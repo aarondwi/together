@@ -36,6 +36,11 @@ type WorkerFn func(map[uint64]interface{}) (map[uint64]interface{}, error)
 // User just need to specify the config on `NewEngine` call,
 // and then use `Submit()` call on logic code.
 //
+// Each worker and each submit (or `many` variant) call will signal at the end of the code
+// that a slot is available.
+// We do this blindly, to make the code clearer that another call should try.
+// This is not degrading performance, as only 1 G is waken up, so no contention
+//
 // Internally, this implementation uses a slice, to hold inflight data.
 // In the future, if the need arises, will add map-based batch.
 // Useful typically for case where multiple keys could be the same.
@@ -75,7 +80,7 @@ type Engine struct {
 //
 // If HardLimit is empty, it is set to SoftLimit * 2.
 //
-// After those conversion, both should still be bigger than 1, and SoftLimit <= HardLimit
+// After those conversion, both should still be > 1, and SoftLimit <= HardLimit
 type EngineConfig struct {
 	NumOfWorker  int
 	SoftLimit    int
@@ -99,10 +104,10 @@ func NewEngine(
 
 	// only change if not set
 	var softLimit, hardLimit int
-	if ec.SoftLimit == 0 {
+	if ec.SoftLimit == 0 && ec.HardLimit > 0 {
 		hardLimit = ec.HardLimit
 		softLimit = ec.HardLimit / 2
-	} else if ec.HardLimit == 0 {
+	} else if ec.HardLimit == 0 && ec.SoftLimit > 0 {
 		softLimit = ec.SoftLimit
 		hardLimit = ec.SoftLimit * 2
 	} else {
@@ -141,9 +146,10 @@ func NewEngine(
 func (e *Engine) worker() {
 	for {
 		e.mu.Lock()
-		for (e.currentBatch == nil ||
-			(e.currentBatch.argSize < e.softLimit && time.Since(e.currentBatch.createdAt) < e.waitDuration)) &&
-			e.batchWaiting == 0 {
+		for e.batchWaiting == 0 &&
+			(e.currentBatch == nil ||
+				(e.currentBatch.argSize < e.softLimit &&
+					time.Since(e.currentBatch.createdAt) < e.waitDuration)) {
 			e.batchReady.Wait()
 		}
 		if e.batchWaiting == 0 { // a new batch has passed softLimit
@@ -154,9 +160,7 @@ func (e *Engine) worker() {
 			panic("Shouldn't be nil after reaching here, `Wait` code must be broken")
 		}
 		e.batchWaiting--
-		if e.batchWaiting < e.numOfWorker {
-			e.batchSlotsAvailable.Broadcast()
-		}
+		e.batchSlotsAvailable.Signal()
 		e.mu.Unlock()
 
 		m, err := e.fn(b.args)
@@ -167,15 +171,6 @@ func (e *Engine) worker() {
 }
 
 // This function should only be called when holding the mutex
-//
-// Note that, it may still hold the mutex when the chan is full,
-// but IMO that is a better option, cause either:
-//
-// 1. backend can't keep up
-//
-// 2. just bad engine configuration (numOfWorker too low, etc)
-//
-// This is a conscious decision, to not balloon the memory requirement, at least for now.
 func (e *Engine) readyToWork() {
 	e.batchChan.add(e.currentBatch)
 	e.batchWaiting++
@@ -248,6 +243,7 @@ func (e *Engine) Submit(arg interface{}) BatchResult {
 	br := e.currentBatch.Put(e.taskID, arg)
 
 	e.checkSoftLimitReadiness()
+	e.batchSlotsAvailable.Signal()
 	e.mu.Unlock()
 
 	return br
@@ -300,5 +296,6 @@ func (e *Engine) SubmitManyInto(args []interface{}, result *[]BatchResult) {
 		}
 		l -= numArgsTaken
 	}
+	e.batchSlotsAvailable.Signal()
 	e.mu.Unlock()
 }

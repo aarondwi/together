@@ -28,7 +28,7 @@ func BatchFunc(m map[uint64]interface{}) (
 func GetEngineConfigForBenchmarks(n int) EngineConfig {
 	return EngineConfig{
 		NumOfWorker:  NUM_OF_WORKER / n,
-		SoftLimit:    NUM_OF_ARGS_TO_WAIT / n,
+		HardLimit:    NUM_OF_ARGS_TO_WAIT / n,
 		WaitDuration: SLEEP_DURATION,
 	}
 }
