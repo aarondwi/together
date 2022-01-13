@@ -109,6 +109,68 @@ func BenchmarkCluster_Partition4_Parallel4096(b *testing.B) {
 	})
 }
 
+func BenchmarkCluster_Partition4_Parallel8192(b *testing.B) {
+	once.Do(initClusterWP)
+	c, err := NewCluster(
+		e.PARTITION_4, WP.GetDefaultPartitioner(e.PARTITION_4),
+		e.GetEngineConfigForBenchmarks(e.PARTITION_4),
+		e.BatchFunc,
+		wpb,
+	)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.SetParallelism(8192 / runtime.NumCPU())
+	b.ReportAllocs()
+	b.SetBytes(8)
+	b.RunParallel(func(pb *testing.PB) {
+		i := rand.Int63n(1000000)
+		for pb.Next() {
+			i++
+			br, err := c.Submit(i)
+			if err != nil {
+				b.Fatal(err)
+			}
+			_, err = br.GetResult()
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
+
+func BenchmarkCluster_Partition4_Parallel16384(b *testing.B) {
+	once.Do(initClusterWP)
+	c, err := NewCluster(
+		e.PARTITION_4, WP.GetDefaultPartitioner(e.PARTITION_4),
+		e.GetEngineConfigForBenchmarks(e.PARTITION_4),
+		e.BatchFunc,
+		wpb,
+	)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.SetParallelism(16384 / runtime.NumCPU())
+	b.ReportAllocs()
+	b.SetBytes(8)
+	b.RunParallel(func(pb *testing.PB) {
+		i := rand.Int63n(1000000)
+		for pb.Next() {
+			i++
+			br, err := c.Submit(i)
+			if err != nil {
+				b.Fatal(err)
+			}
+			_, err = br.GetResult()
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
+
 func BenchmarkCluster_Partition8_Parallel256(b *testing.B) {
 	once.Do(initClusterWP)
 	c, err := NewCluster(
@@ -202,6 +264,68 @@ func BenchmarkCluster_Partition8_Parallel4096(b *testing.B) {
 	})
 }
 
+func BenchmarkCluster_Partition8_Parallel8192(b *testing.B) {
+	once.Do(initClusterWP)
+	c, err := NewCluster(
+		e.PARTITION_8, WP.GetDefaultPartitioner(e.PARTITION_8),
+		e.GetEngineConfigForBenchmarks(e.PARTITION_8),
+		e.BatchFunc,
+		wpb,
+	)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.SetParallelism(8192 / runtime.NumCPU())
+	b.ReportAllocs()
+	b.SetBytes(8)
+	b.RunParallel(func(pb *testing.PB) {
+		i := rand.Int63n(1000000)
+		for pb.Next() {
+			i++
+			br, err := c.Submit(i)
+			if err != nil {
+				b.Fatal(err)
+			}
+			_, err = br.GetResult()
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
+
+func BenchmarkCluster_Partition8_Parallel16384(b *testing.B) {
+	once.Do(initClusterWP)
+	c, err := NewCluster(
+		e.PARTITION_8, WP.GetDefaultPartitioner(e.PARTITION_8),
+		e.GetEngineConfigForBenchmarks(e.PARTITION_8),
+		e.BatchFunc,
+		wpb,
+	)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.SetParallelism(16384 / runtime.NumCPU())
+	b.ReportAllocs()
+	b.SetBytes(8)
+	b.RunParallel(func(pb *testing.PB) {
+		i := rand.Int63n(1000000)
+		for pb.Next() {
+			i++
+			br, err := c.Submit(i)
+			if err != nil {
+				b.Fatal(err)
+			}
+			_, err = br.GetResult()
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
+
 func BenchmarkCluster_Partition16_Parallel256(b *testing.B) {
 	once.Do(initClusterWP)
 	c, err := NewCluster(
@@ -277,6 +401,68 @@ func BenchmarkCluster_Partition16_Parallel4096(b *testing.B) {
 	}
 
 	b.SetParallelism(4096 / runtime.NumCPU())
+	b.ReportAllocs()
+	b.SetBytes(8)
+	b.RunParallel(func(pb *testing.PB) {
+		i := rand.Int63n(1000000)
+		for pb.Next() {
+			i++
+			br, err := c.Submit(i)
+			if err != nil {
+				b.Fatal(err)
+			}
+			_, err = br.GetResult()
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
+
+func BenchmarkCluster_Partition16_Parallel8192(b *testing.B) {
+	once.Do(initClusterWP)
+	c, err := NewCluster(
+		e.PARTITION_16, WP.GetDefaultPartitioner(e.PARTITION_16),
+		e.GetEngineConfigForBenchmarks(e.PARTITION_16),
+		e.BatchFunc,
+		wpb,
+	)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.SetParallelism(8192 / runtime.NumCPU())
+	b.ReportAllocs()
+	b.SetBytes(8)
+	b.RunParallel(func(pb *testing.PB) {
+		i := rand.Int63n(1000000)
+		for pb.Next() {
+			i++
+			br, err := c.Submit(i)
+			if err != nil {
+				b.Fatal(err)
+			}
+			_, err = br.GetResult()
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
+}
+
+func BenchmarkCluster_Partition16_Parallel16384(b *testing.B) {
+	once.Do(initClusterWP)
+	c, err := NewCluster(
+		e.PARTITION_16, WP.GetDefaultPartitioner(e.PARTITION_16),
+		e.GetEngineConfigForBenchmarks(e.PARTITION_16),
+		e.BatchFunc,
+		wpb,
+	)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	b.SetParallelism(16384 / runtime.NumCPU())
 	b.ReportAllocs()
 	b.SetBytes(8)
 	b.RunParallel(func(pb *testing.PB) {

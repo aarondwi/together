@@ -14,7 +14,7 @@ This means CPU and time are used more on the expensive stuff, instead of the mor
 Async patterns emerged to solve efficiency issue from older, thread-based pattern. But while they indeed saves on resources, they don't directly translate to better utilization. Biggest reasons for this are traditional protocol (the most famous one being HTTP and/or Postgres/MySQL protocol) are blocking protocols, so the asynchronous-ism just happen inside the instance, while all the expensive network-related stuff still done synchronously. Async runtimes also don't promote enough back-pressure and/or cancellation needed (see [here](https://lucumr.pocoo.org/2020/1/1/async-pressure/) for good contexts, and [its HN thread](https://news.ycombinator.com/item?id=21927427)), so actually they just make bottlenecks on DB/other upstreams happen faster than before.
 
 Human themselves usually can't spot the difference between 5ms and 10, 50, 100, or even 200ms. So the option to trade bit of latencies for throughput is worth it.
-Most data store (database, queue, 3rd party API, etc) already have batching capability (such as `group commit`, `insert multiple`, `update join`, `select in`, and their equivalents). This also basically changes I/O-heavy to CPU-heavy stuff, which is far easier to optimize.
+Most data store (database, queue, 3rd party API, etc) already have batching capability (`group commit`, `insert multiple`, `update join`, `select in`, and their equivalents). This allows stateless tier to do some work (batching) for the upstream, basically changes I/O-heavy to CPU-heavy stuff, which is far easier to optimize.
 
 Unfortunately, most business-logic code (READ: `almost all`) does not use this technique. There are some,
 but only done per request basis, usually when the request has lots of data to insert/fetch at once.
@@ -40,7 +40,7 @@ go get -u github.com/aarondwi/together
 
 1. Small and clear codebase (~1000 LoC), excluding tests.
 2. General enough to be used for any batching case, and can easily be abstracted higher.
-3. Fast. On my test laptop, with workers simulating relatively fast network call by sleeping for 1-3ms, reaching 1-2 million work/s.
+3. Fast. On my test laptop, when callers submit 1 by 1, with workers simulating relatively fast network call by sleeping for 1-3ms, reaching ~1-2 million work/s. When callers submit a batch of 256, it reached ~6 million/s
 4. Easy promise-like API (just use `Submit` or equivalent call), and all params will be available to batch worker. You just need to return the call with same key as the given parameters.
 5. Circumvent single lock contention using `Cluster` implementation.
 6. Optional background worker, so no goroutine creations on hot path (using tunable `WorkerPool`).
@@ -58,7 +58,7 @@ For example how to write typical business logic as batch, please see [here](http
 ## Notes
 
 1. This is **NOT** a batch processor like [spring batch](https://spring.io/projects/spring-batch), [dbt](https://www.getdbt.com/), [spark](https://spark.apache.org/), or anything like that. `This library does combining/deduplicating/scatter-gather multiple request into (preferably) single request to backend, like how Facebook manages its [memcache's flow](https://www.mimuw.edu.pl/~iwanicki/courses/ds/2016/presentations/08_Pawlowska.pdf) or Quora with their [asynq](https://github.com/quora/asynq).
-2. This is designed to be used in high level, business OLTP code, so it is not aiming to be *every-last-cpu-cycle* optimized (in particular, this implementation use `interface{}`, which is yet another pointer + allocation, until golang support generics).
+2. This is designed to be used in high level, business code, so it is not aiming to be *every-last-cpu-cycle* optimized (in particular, this implementation use `interface{}`, which is yet another pointer + allocation, until golang support generics).
 If you have something that can be solved with this pattern, but need a more optimized one, it is recommended to make something similar yourself.
 3. The batching implementation waits on either number of message (soft and hard limit) and timeout (akin to [kafka](https://kafka.apache.org/)'s `batch.size` and `linger.ms`), combined with [Smart Batching](http://mechanical-sympathy.blogspot.com/2011/10/smart-batching.html), to ensure we get the largest batch allowed.
 This is by design, because we either want to batch for throughput or for saving (if you call 3rd party APIs
@@ -72,6 +72,8 @@ If you (or a library you are using) still insist to use `panic`, please `recover
 6. For now, there are no plans to support dynamic, adaptive setup (a la [Netflix adaptive concurrency limit](https://netflixtechblog.medium.com/performance-under-load-3e6fa9a60581)).
 Besides cause this library gonna need more tuning (number of worker, batch size, waiting size, how to handle savings, etc) which makes it really really complex, together's Batch Buffering already absorbs most of the contention from requests, and upstream services easily become CPU bottlenecked. Adaptivity just gonna make CPU not operating at maximum available capacity.
 Instead, allow the batch to be a bit bigger. This will already allow you to serve most requests even on heavy surge instead of a downtime
+7. Even though the focus is for OLTP code, batch/ETL code can also use this when enriching result from multiple API
+8. This library is much more general purpose than [golang's singleflight](https://pkg.go.dev/golang.org/x/sync/singleflight). You can implement singleflight on top of this library (albeit with bit different wait semantic). And while singleflight force you to share the resulting object (means don't mutate), this library does not (although you can)
 
 ## Setup Recommendations
 
@@ -88,8 +90,17 @@ We use 1 message per `Submit()` for the normal usage to mimic the outermost serv
 
 ## Nice to have
 
-1. Support for generic, once golang supports it. (How to adapt combiner's semantic though?)
+1. Support for generic, once golang supports it
 2. Workerpool to have rate-limited, max new goroutine per second and global max, so not fire-and-forget goroutines only, but amortized to a number of works
 3. Cancellations for batch(?)
-4. Actually implementing adaptivity, but only after knowing how much adaptivity should be designed, what the algorithm gonna be, and for what case.
+4. Actually implementing adaptivity:
+
+    * Batch size hard limit is fixed. This is a hard requirement
+    * Number of worker from 1. Most of the time is enough, try climbing slowly. Latency is the metric
+    * Wait time can increase slowly, to cope with overload. But at this state, should worker only 1? -> reduce load
+    * shared tracking context for multiple engines? separate?
+
 5. Key-value based batch, as key-value use case is the most probable to be in need of high throughput
+6. `Combiner` possibly return internal channel directly, letting user manage `resolutionHelper` in a pipelined way
+7. Move Cluster and Combiner to config object (?)
+8. Add fuzzy test
