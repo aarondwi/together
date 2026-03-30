@@ -90,17 +90,6 @@ We use 1 message per `Submit()` for the normal usage to mimic the outermost serv
 
 ## Nice to have
 
-1. Support for generic, once golang supports it
+1. Supports for generic (not sure bout combiner and shared workerpool behavior)
 2. Workerpool to have rate-limited, max new goroutine per second and global max, so not fire-and-forget goroutines only, but amortized to a number of works
-3. Cancellations for batch(?)
-4. Actually implementing adaptivity:
-
-    * Batch size hard limit is fixed. This is a hard requirement
-    * Number of worker from 1. Most of the time is enough, try climbing slowly. Latency is the metric
-    * Wait time can increase slowly, to cope with overload. But at this state, should worker only 1? -> reduce load
-    * shared tracking context for multiple engines? separate?
-
-5. Key-value based batch, as key-value use case is the most probable to be in need of high throughput
-6. `Combiner` possibly return internal channel directly, letting user manage `resolutionHelper` in a pipelined way
-7. Move Cluster and Combiner to config object (?)
-8. Add fuzzy test
+3. Add synctest
